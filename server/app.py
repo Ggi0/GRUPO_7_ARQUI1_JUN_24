@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from motorStepper import StepperMotor
+from servoMotor import ServoMotor
 import RPi.GPIO as GPIO
 import sys
 import time
@@ -17,6 +18,7 @@ leds = []
 
 # Variable para almacenar el estado del motor
 estado_motor = None
+estado_servo_motor = None
 
 # Tipo de configuración de los puertos
 GPIO.setmode(GPIO.BOARD)
@@ -35,10 +37,27 @@ PIN_IN2_STEPPER = 33
 PIN_IN3_STEPPER = 35
 PIN_IN4_STEPPER = 37
 
+# Declaracion de puerto GPIO
+LED1 = 11
+LED2 = 15
+LED3 = 16
+SERVO_PIN = 13
+
+# Configurar pines como salida
+GPIO.setup(LED1, GPIO.OUT)
+GPIO.setup(LED2, GPIO.OUT)
+GPIO.setup(LED3, GPIO.OUT)
+GPIO.setup(SERVO_PIN, GPIO.OUT)
+
+
 # Función para activar el puerto específico y en un estado específico
 def controlar_gpio(puerto, estado):
     if puerto == 1:
         GPIO.output(LED1, estado)
+    elif puerto == 2:
+        GPIO.output(LED2, estado)
+    elif puerto == 3:
+        GPIO.output(LED3, estado)
     elif puerto == 2:
         GPIO.output(MOTOR, estado)
     else:
@@ -60,6 +79,9 @@ seq = [
 
 # * Instancia del motor stepper
 motor_stepper = StepperMotor(step_pins, seq)
+
+# Crear instancia del servo motor
+servo_motor = ServoMotor(SERVO_PIN)
 
 """
 @app.route('/api/users', methods=['GET'])
@@ -147,6 +169,35 @@ def ver_estado_motor():
     
     return jsonify({"estado_motor": estado_motor}), 200
 
+@app.route('/api/activarServoMotor', methods=['POST'])
+def activar_servo_motor():
+    global estado_servo_motor
+    data = request.json
+    estado = data.get('estado')
+    angulo = data.get('angulo')
+
+    if not isinstance(estado, int) or not isinstance(angulo, int):
+        return jsonify({"error": "Los parámetros 'estado' y 'angulo' deben ser numéricos"}), 400
+
+    estado_servo_motor = estado
+    if estado_servo_motor == 1:
+        servo_motor.move(angulo)
+        print(f"Motor activado a {angulo} grados")
+    else:
+        servo_motor.stop()
+        print("Motor detenido")
+
+    return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
+
+@app.route('/api/verEstadoServoMotor', methods=['GET'])
+def ver_estado_servo_motor():
+    global estado_servo_motor
+
+    if estado_servo_motor is None:
+        return jsonify({"error": "El estado del motor no ha sido configurado aún"}), 404
+
+    return jsonify({"estado_servo_motor": estado_servo_motor}), 200
+
 #Codigo que se ejecuta solo una vez
 def setup():
     #Declaracion de GPIO input o output
@@ -176,5 +227,6 @@ try:
                 app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
         
 except KeyboardInterrupt:
+        servo_motor.stop()
         running = False
         GPIO.cleanup()
