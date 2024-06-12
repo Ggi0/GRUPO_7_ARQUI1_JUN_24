@@ -5,7 +5,7 @@ import threading
 
 # * Clase para controlar el motor stepper
 class StepperMotor:
-    def __init__(self, step_pins, seq, wait_time=10):
+    def __init__(self, step_pins, seq, wait_time=5):
         self.step_pins = step_pins
         self.seq = seq
         self.step_count = len(seq)

@@ -41,7 +41,7 @@ PIN_IN4_STEPPER = 37
 LED1 = 11
 LED2 = 15
 LED3 = 16
-SERVO_PIN = 13
+SERVO_PIN = 18
 
 # Configurar pines como salida
 GPIO.setup(LED1, GPIO.OUT)
