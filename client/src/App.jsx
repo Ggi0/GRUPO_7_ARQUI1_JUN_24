@@ -31,6 +31,27 @@ function App() {
     }
   };
 
+  // * Codigo de la cinta transportadora
+  const [bandaTransportadora, setBandaTransportadora] = useState(false);
+
+  const handleCheckboxChange = (event) => {
+    const isChecked = event.target.checked;
+    setBandaTransportadora(isChecked);
+    // Envía el estado al servidor Flask
+    enviarEstadoAlServidor(isChecked);
+  };
+
+  const enviarEstadoAlServidor = async (isChecked) => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/activarMotor', {
+        estado: isChecked ? 1 : 0
+      });
+      console.log('Estado enviado correctamente.');
+    } catch (error) {
+      console.error('Error al enviar el estado:', error);
+    }
+  };
+
   const portfolioItems = [
     { id: 1, imgSrc: "./src/assets/img/portfolio/ilumina.jpg", alt: "Ilumina", modalId: "#portfolio-modal-1" },
     { id: 2, imgSrc: "./src/assets/img/portfolio/reception.jpg", alt: "Reception", modalId: "#portfolio-modal-2" },
@@ -245,8 +266,14 @@ function App() {
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/cinta_1.png" />
                     <form>
                       <div className="form-check form-switch">
-                        <input className="form-check-input" type="checkbox" id="formCheck-1" style={{ width: '42px', height: '26px' }} />
-                        <label className="form-check-label" htmlFor="formCheck-1" style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Banda transportadora</label>
+                        <input className="form-check-input"
+                          type="checkbox" id="formCheck-1"
+                          style={{ width: '42px', height: '26px' }}
+                          checked={bandaTransportadora}
+                          onChange={handleCheckboxChange} />
+                        <label className="form-check-label"
+                          htmlFor="formCheck-1"
+                          style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Banda transportadora</label>
                       </div>
                     </form>
                   </div>
