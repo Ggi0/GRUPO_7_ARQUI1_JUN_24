@@ -3,6 +3,7 @@ import axios from 'axios'
 
 function App() {
 
+<<<<<<< HEAD
   const portfolioItems = [
     { id: 1, imgSrc: "./src/assets/img/portfolio/ilumina.jpg", alt: "Ilumina", modalId: "#portfolio-modal-1" },
     { id: 2, imgSrc: "./src/assets/img/portfolio/reception.jpg", alt: "Reception", modalId: "#portfolio-modal-2" },
@@ -10,6 +11,16 @@ function App() {
     { id: 4, imgSrc: "./src/assets/img/portfolio/desccarga.png", alt: "Descarga", modalId: "#portfolio-modal-4" },
     { id: 5, imgSrc: "./src/assets/img/portfolio/alarma.jpg", alt: "Alarma", modalId: "#portfolio-modal-5" }
   ];
+=======
+  const fecthAPI = async () => {
+    const response = await axios.get('http://127.0.0.1:5000/api/users')
+    setArray(response.data.users)
+  }
+
+  useEffect(() => {
+    fecthAPI()
+  }, [])
+>>>>>>> d4e5d07e1f9fa3ca24235d169946c3802e68d56b
 
   return (
     <>
