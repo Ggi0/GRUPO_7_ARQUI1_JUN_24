@@ -1,9 +1,36 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 
 function App() {
 
-<<<<<<< HEAD
+  const [selectedArea, setSelectedArea] = useState('');
+
+  const handleAreaChange = (event) => {
+    setSelectedArea(event.target.value);
+  };
+
+  const sendDataToServer = async () => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/onLED', {
+        area: selectedArea
+      });
+      console.log('Datos enviados correctamente.');
+    } catch (error) {
+      console.error('Error al enviar los datos:', error);
+    }
+  };
+
+  const sendDataToServer_1 = async () => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/offLED', {
+        area: selectedArea
+      });
+      console.log('Datos enviados correctamente.');
+    } catch (error) {
+      console.error('Error al enviar los datos:', error);
+    }
+  };
+
   const portfolioItems = [
     { id: 1, imgSrc: "./src/assets/img/portfolio/ilumina.jpg", alt: "Ilumina", modalId: "#portfolio-modal-1" },
     { id: 2, imgSrc: "./src/assets/img/portfolio/reception.jpg", alt: "Reception", modalId: "#portfolio-modal-2" },
@@ -11,16 +38,6 @@ function App() {
     { id: 4, imgSrc: "./src/assets/img/portfolio/desccarga.png", alt: "Descarga", modalId: "#portfolio-modal-4" },
     { id: 5, imgSrc: "./src/assets/img/portfolio/alarma.jpg", alt: "Alarma", modalId: "#portfolio-modal-5" }
   ];
-=======
-  const fecthAPI = async () => {
-    const response = await axios.get('http://127.0.0.1:5000/api/users')
-    setArray(response.data.users)
-  }
-
-  useEffect(() => {
-    fecthAPI()
-  }, [])
->>>>>>> d4e5d07e1f9fa3ca24235d169946c3802e68d56b
 
   return (
     <>
@@ -157,14 +174,20 @@ function App() {
                     <form>
                       {['Recepción', 'Conferencias', 'Trabajo', 'Administrativa', 'Carga y Descarga', 'Cafetería', 'Baño', 'Exterior'].map((area, index) => (
                         <div className="form-check" style={{ paddingLeft: '100px', boxShadow: '0px 0px 4px' }} key={index}>
-                          <input className="form-check-input" type="radio" id={`formCheck-${9 + index}`} name="flexRadioDefault" />
+                          <input className="form-check-input"
+                            type="radio" id={`formCheck-${9 + index}`}
+                            name="flexRadioDefault"
+                            value={area}
+                            onChange={handleAreaChange} />
                           <label className="form-check-label" htmlFor={`formCheck-${9 + index}`}>{area}</label>
                         </div>
                       ))}
+
                       <div style={{ margin: '15px' }}>
-                        <button className="btn btn-primary" type="button" style={{ marginRight: '4px' }}>Encender</button>
-                        <button className="btn btn-danger" type="button" style={{ marginLeft: '4px' }}>Apagar</button>
+                        <button className="btn btn-primary" type="button" onClick={sendDataToServer} style={{ marginRight: '4px' }}>Encender</button>
+                        <button className="btn btn-danger" type="button" onClick={sendDataToServer_1} style={{ marginLeft: '4px' }}>Apagar</button>
                       </div>
+
                     </form>
                   </div>
                 </div>
