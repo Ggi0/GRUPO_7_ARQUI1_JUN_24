@@ -9,7 +9,7 @@ function App() {
     setSelectedArea(event.target.value);
   };
 
-
+  //asdf
   // * Iluminación encendida
   const sendDataToServer = async () => {
     try {
