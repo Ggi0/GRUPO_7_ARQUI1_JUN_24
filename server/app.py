@@ -9,7 +9,7 @@ import threading
 app = Flask(__name__)
 
 # * Enable CORS for all routes of the app 
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+cors = CORS(app, origins =["http://localhost:5173"], supports_credentials=True)
 
 # Lista para almacenar el estado de los LEDs
 leds = []
@@ -77,6 +77,7 @@ def controlar_gpio(puerto,estado):
     else:
         print("No existe el puerto para activarlo.")  
 
+
 def activar_motor_stepper():
     global StepCount
     global StepCounter
@@ -123,7 +124,7 @@ def resume_motor():
     pause.set()
     print("Motor reanudado")
 
-@app.route('/activarLed', methods=['POST'])
+@app.route('/api/activarLed', methods=['POST'])
 def activar_led():
     global leds
     data = request.json
@@ -148,7 +149,7 @@ def activar_led():
     
     return jsonify({"mensaje": "Estado del LED actualizado correctamente"}), 200
 
-@app.route('/verEstadoLED', methods=['GET'])
+@app.route('/api/verEstadoLED', methods=['GET'])
 def ver_estado_led():
     global leds
     cuarto = request.args.get('cuarto', type=int)
@@ -162,7 +163,7 @@ def ver_estado_led():
     
     return jsonify({"error": "Cuarto no encontrado"}), 404
 
-@app.route('api/activarMotor', methods=['POST'])
+@app.route('/api/activarMotor', methods=['POST'])
 def activar_motor():
     global estado_motor
     global iniciar_stepper
@@ -177,6 +178,10 @@ def activar_motor():
     if estado_motor == 1:
         start_motor()
         print("Motor activado")
+        print(PIN_IN1_STEPPER)
+        print(PIN_IN2_STEPPER)
+        print(PIN_IN3_STEPPER)
+        print(PIN_IN4_STEPPER)
     else:
         stop_motor()
         print("Motor detenido")
@@ -188,7 +193,7 @@ def activar_motor():
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
 
-@app.route('api/verEstadoMotor', methods=['GET'])
+@app.route('/api/verEstadoMotor', methods=['GET'])
 def ver_estado_motor():
     global estado_motor
 
@@ -196,6 +201,8 @@ def ver_estado_motor():
         return jsonify({"error": "El estado del motor no ha sido configurado aún"}), 404
     
     return jsonify({"estado_motor": estado_motor}), 200
+
+    
 
 #Codigo que se ejecuta solo una vez
 def setup():
@@ -233,7 +240,6 @@ def handle_data_1():
     print("Área seleccionada se apaga:", selected_area)
     return 'Datos recibidos correctamente'
 
-    
 try:
     while True:
         time.sleep(1)  # Mantener el hilo principal dormido
@@ -242,9 +248,8 @@ try:
             if __name__ == '__main__':
                 setup()
                 crear = False
-                app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+                app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
         
 except KeyboardInterrupt:
         running = False
         GPIO.cleanup()
-        
