@@ -51,7 +51,7 @@ StepDir = 1 # Colocar 1 o 2 para sentido horario
 
 # Initialise variables
 StepCounter = 0
-
+#asd
 
 # Read wait time from command line
 if len(sys.argv)>1:
