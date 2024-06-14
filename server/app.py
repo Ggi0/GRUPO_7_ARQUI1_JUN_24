@@ -9,7 +9,7 @@ import threading
 app = Flask(__name__)
 
 # * Enable CORS for all routes of the app 
-cors = CORS(app, origins =["http://localhost:5173"], supports_credentials=True)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 # Lista para almacenar el estado de los LEDs
 leds = []
