@@ -7,6 +7,7 @@ function App() {
 
   const handleAreaChange = (event) => {
     setSelectedArea(event.target.value);
+    console.log('Selected index:', event.target.value);
   };
 
   //asdf
@@ -14,9 +15,9 @@ function App() {
   const sendDataToServer = async () => {
     try {
       await axios.post('http://127.0.0.1:8000/api/onLED', {
-        area: selectedArea
+        index: selectedArea
       });
-      console.log('Datos enviados correctamente.');
+      console.log('Datos enviados correctamente. ' + selectedArea);
     } catch (error) {
       console.error('Error al enviar los datos:', error);
     }
@@ -85,7 +86,7 @@ function App() {
 
   const enviarEstadoAlServidorServo = async (isChecked) => {
     try {
-      await axios.post('http://127.0.0.1:8000/api/activarMotor', {
+      await axios.post('http://127.0.0.1:8000/api/activarServoMotor', {
         estado: isChecked ? 1 : 0
       });
       console.log('Estado enviado correctamente.');
@@ -256,12 +257,12 @@ function App() {
                     <hr className="star-dark mb-5" />
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/ilumina_1.jpg" style={{ width: 'auto', height: 'auto' }} alt="iluminación" />
                     <form>
-                      {['Recepción', 'Conferencias', 'Trabajo', 'Administrativa', 'Carga y Descarga', 'Cafetería', 'Baño', 'Exterior'].map((area, index) => (
+                      {['Recepción', 'Administrativa', 'Baño', 'Conferencias', 'Carga y Descarga', 'Exterior', 'Cafetería', 'Trabajo'].map((area, index) => (
                         <div className="form-check" style={{ paddingLeft: '100px', boxShadow: '0px 0px 4px' }} key={index}>
                           <input className="form-check-input"
                             type="radio" id={`formCheck-${9 + index}`}
                             name="flexRadioDefault"
-                            value={area}
+                            value={index}
                             onChange={handleAreaChange} />
                           <label className="form-check-label" htmlFor={`formCheck-${9 + index}`}>{area}</label>
                         </div>
