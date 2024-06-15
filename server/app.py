@@ -18,7 +18,13 @@ leds = []
 estado_motor = None
 estado_servo= None
 
+#velocidad servomotor
 pwm = None
+
+#variables laser 
+luz_recibida1 = None
+luz_recibida2 = None
+
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
 
@@ -26,6 +32,8 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
 #Declaracion de puerto GPIO
+#MOTOR STEPPER 
+#el pin 11 a 13 no se estan usan
 LED1 = 11
 MOTOR = 13
 PIN_IN1_STEPPER = 31
@@ -40,6 +48,22 @@ PIN_C = 23
 
 #SERVOMOTOR
 PIN_SERVO = 12
+
+# ---------- LASER -----------
+# laser
+PIN_LASER = 38 #GPIO20
+
+# fotoresistencia
+PIN_F1 = 11 # GPIO17 
+PIN_F2 = 21 # GPIO19
+
+# buzzer
+PIN_BUZZER = 40 #GPIO21
+
+# Luz externa
+PIN_LEDf = 36 #GPIO16
+
+
 
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
@@ -76,6 +100,41 @@ iniciar_stepper = True
 
 # Control creacion de api
 crear = True
+
+
+
+#Funciones Laser 
+def laser():
+    global luz_recibida2
+    luz_recibida2 = GPIO.input(PIN_F2)
+    
+    GPIO.output(PIN_LASER, GPIO.HIGH)
+    GPIO.output(PIN_LEDf, GPIO.HIGH)
+    
+    if luz_recibida2:
+        print("Mucha luz en FOTORESISTENCIA2: Apagando el buzzer")
+        GPIO.output(PIN_BUZZER, GPIO.LOW)
+    else:
+        print("Poca luz en FOTORESISTENCIA2: Encendiendo el buzzer")
+        GPIO.output(PIN_BUZZER, GPIO.HIGH)
+
+def fotoresistencia1():
+    global luz_recibida1
+    luz_recibida1 = GPIO.input(PIN_F1)
+    while True:
+        if luz_recibida1:
+            print("Mucha luz en FOTORESISTENCIA1: Apagando el láser y el LED")
+            GPIO.output(PIN_LASER, GPIO.LOW)
+            GPIO.output(PIN_LEDf, GPIO.LOW)
+        else:
+            print("Poca luz en F1: Encendiendo el láser y el LED")
+            laser()
+        time.sleep(5) # Espera 5 segundos antes de repetir
+
+
+
+
+
 
 #Funcion para activar el servo motor
 def init_servo(pin, frequency=50):
@@ -293,28 +352,39 @@ def ver_estado_servomotor():
 #Codigo que se ejecuta solo una vez
 def setup():
     #Declaracion de GPIO input o output
-    GPIO.setup(LED1, GPIO.OUT)
+    #GPIO.setup(LED1, GPIO.OUT)
+    
+    # ---- MOTORES ----
     GPIO.setup(MOTOR, GPIO.OUT)
     GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN4_STEPPER,GPIO.OUT)
 
-    #LUCES CUARTOS
+    # ---- LUCES CUARTOS ----
     GPIO.setup(PIN_A, GPIO.OUT)
     GPIO.setup(PIN_B, GPIO.OUT)
     GPIO.setup(PIN_C, GPIO.OUT)
 
-    #SERVOMOTOR
+    # ---- SERVOMOTOR ----
     GPIO.setup(PIN_SERVO, GPIO.OUT)
 
-    #Iniciar apagados los puertos
+    # ---- LASER ----
+    GPIO.setup(PIN_LASER, GPIO.OUT)
+    GPIO.setup(PIN_LEDf, GPIO.OUT)
+    GPIO.setup(PIN_BUZZER, GPIO.OUT)
+    GPIO.setup(PIN_F1, GPIO.IN)
+    GPIO.setup(PIN_F2, GPIO.IN)
+
+
+    # ----- Iniciar apagados los puertos -------
     GPIO.output(LED1, 0)
     GPIO.output(MOTOR, 0)
     GPIO.output(PIN_IN1_STEPPER,0)
     GPIO.output(PIN_IN2_STEPPER,0)
     GPIO.output(PIN_IN3_STEPPER,0)
     GPIO.output(PIN_IN4_STEPPER,0)
+
 
 
 #LUCES CUARTOS
