@@ -80,6 +80,7 @@ function App() {
 
   // * Codigo del porton automatico
   const [portonAutomatico, setPortonAutomatico] = useState(false);
+
   const [statusPorton, setStatusPorton] = useState('cerrado'); // Estado inicial del portón [abierto, cerrado]   
 
   const handleCheckboxChangeServo = (event) => {

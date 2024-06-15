@@ -104,6 +104,7 @@ def move_servo(pwm, angle):
     #pwm.ChangeDutyCycle(duty_cycle)  # Mant�n el pulso activo para asegurar el movimiento
     #time.sleep(0.5)  # Asegurar tiempo suficiente para que el servo se mueva completamente
     pwm.ChangeDutyCycle(0)  # Detener el pulso para no mantener el servo en movimiento
+    
 
 def stop_servo(pwm):
     """
