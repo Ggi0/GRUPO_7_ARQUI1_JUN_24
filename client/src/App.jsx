@@ -3,7 +3,6 @@ import axios from 'axios'
 
 function App() {
 
-  // * Codigo de la iluminacion
   const [selectedArea, setSelectedArea] = useState('');
 
   const handleAreaChange = (event) => {
