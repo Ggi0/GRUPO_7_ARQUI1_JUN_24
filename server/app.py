@@ -300,7 +300,7 @@ def setup():
     GPIO.setup(PIN_C, GPIO.OUT)
 
     #SERVOMOTOR
-    GPIO.setup(PIN_SERVO, GPIO.OUT)
+    # GPIO.setup(PIN_SERVO, GPIO.OUT)
 
     #Iniciar apagados los puertos
     GPIO.output(PIN_IN1_STEPPER,0)
