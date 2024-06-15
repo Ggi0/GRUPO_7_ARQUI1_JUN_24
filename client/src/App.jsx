@@ -35,7 +35,11 @@ function App() {
     }
   };
 
+<<<<<<< HEAD
   // codigo laser
+=======
+// codigo laser
+>>>>>>> a2d19564321eb09bf9959f24fece4b6656d682c5
   const sendDataToServer_19 = async () => {
     try {
       await axios.post('http://127.0.0.1:8000/api/Laser', {
