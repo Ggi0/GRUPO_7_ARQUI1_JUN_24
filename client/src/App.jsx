@@ -3,6 +3,7 @@ import axios from 'axios'
 
 function App() {
 
+  // * Codigo de la iluminacion
   const [selectedArea, setSelectedArea] = useState('');
 
   const handleAreaChange = (event) => {
@@ -55,10 +56,13 @@ function App() {
 
   // * Codigo de la cinta transportadora
   const [bandaTransportadora, setBandaTransportadora] = useState(false);
+  const [statusBanda, setStatusBanda] = useState('detenida'); // Initial state for the status of the conveyor belt 
 
   const handleCheckboxChange = (event) => {
     const isChecked = event.target.checked;
     setBandaTransportadora(isChecked);
+    const nuevoStatusBanda = isChecked ? 'en movimiento' : 'detenida';
+    setStatusBanda(nuevoStatusBanda);
     // Envía el estado al servidor Flask
     enviarEstadoAlServidor(isChecked);
   };
@@ -69,6 +73,7 @@ function App() {
         estado: isChecked ? 1 : 0
       });
       console.log('Estado enviado correctamente.');
+
     } catch (error) {
       console.error('Error al enviar el estado:', error);
     }
@@ -76,10 +81,24 @@ function App() {
 
   // * Codigo del porton automatico
   const [portonAutomatico, setPortonAutomatico] = useState(false);
+  const [statusPorton, setStatusPorton] = useState('cerrado'); // Estado inicial del portón [abierto, cerrado]   
 
   const handleCheckboxChangeServo = (event) => {
     const isChecked = event.target.checked;
     setPortonAutomatico(isChecked);
+
+    if (isChecked) {
+      setStatusPorton('Abriendo Porton'); // Cambia el estado del portón a abierto 
+      setTimeout(() => {
+        setStatusPorton('Abierto');
+      }, 3000); // Ajusta el tiempo según sea necesario 
+    } else {
+      setStatusPorton('Cerrando Porton'); // Cambia el estado del portón a cerrado 
+      setTimeout(() => {
+        setStatusPorton('Cerrado');
+      }, 3000); // Ajusta el tiempo según sea necesario 
+    }
+
     // Envía el estado al servidor Flask
     enviarEstadoAlServidorServo(isChecked);
   }
@@ -113,8 +132,6 @@ function App() {
 
     fetchAlarma();
   }, []);
-
-
 
   const portfolioItems = [
     { id: 1, imgSrc: "./src/assets/img/portfolio/ilumina.jpg", alt: "Ilumina", modalId: "#portfolio-modal-1" },
@@ -339,6 +356,8 @@ function App() {
                           htmlFor="formCheck-1"
                           style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Banda transportadora</label>
                       </div>
+                      <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Estado:&nbsp;</label>
+                      <span style={{ fontSize: '20px' }}>{statusBanda}</span>
                     </form>
                   </div>
                 </div>
@@ -375,6 +394,8 @@ function App() {
                           onChange={handleCheckboxChangeServo} />
                         <label className="form-check-label" htmlFor="formCheck-2" style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Porton</label>
                       </div>
+                      <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Estado:&nbsp;</label>
+                      <span style={{ fontSize: '20px' }}>{statusPorton}</span>
                     </form>
                   </div>
                 </div>
