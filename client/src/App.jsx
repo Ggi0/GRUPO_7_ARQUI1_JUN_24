@@ -36,6 +36,18 @@ function App() {
     }
   };
 
+// codigo laser
+  const sendDataToServer_19 = async () => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/Laser', {
+        area: selectedArea
+      });
+      console.log('Datos enviados correctamente.');
+    } catch (error) {
+      console.error('Error al enviar los datos:', error);
+    }
+  };
+
   // * codigo de la recepcion
   const [clientes] = useState(0);
 

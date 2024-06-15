@@ -24,6 +24,8 @@ pwm = None
 #variables laser 
 luz_recibida1 = None
 luz_recibida2 = None
+luz_exterior = False
+alarmaEncendida = False
 
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
@@ -52,6 +54,8 @@ PIN_SERVO = 12
 # ---------- LASER -----------
 # laser
 PIN_LASER = 38 #GPIO20
+
+
 
 # fotoresistencia
 PIN_F1 = 11 # GPIO17 
@@ -104,12 +108,26 @@ crear = True
 
 
 #Funciones Laser 
+
+def luz_exterior():
+    global luz_exterior
+    
+    if luz_exterior:
+        GPIO.output(PIN_LEDf, GPIO.HIGH)
+    
+    else:
+        GPIO.output(PIN_LEDf, GPIO.LOW)
+        
+    
+    
+
+
 def laser():
     global luz_recibida2
     luz_recibida2 = GPIO.input(PIN_F2)
     
     GPIO.output(PIN_LASER, GPIO.HIGH)
-    GPIO.output(PIN_LEDf, GPIO.HIGH)
+    
     
     if luz_recibida2:
         print("Mucha luz en FOTORESISTENCIA2: Apagando el buzzer")
@@ -117,9 +135,14 @@ def laser():
     else:
         print("Poca luz en FOTORESISTENCIA2: Encendiendo el buzzer")
         GPIO.output(PIN_BUZZER, GPIO.HIGH)
+        
+    
+
+
 
 def fotoresistencia1():
     global luz_recibida1
+    global luz_exterior
     luz_recibida1 = GPIO.input(PIN_F1)
     while True:
         if luz_recibida1:
@@ -129,6 +152,7 @@ def fotoresistencia1():
         else:
             print("Poca luz en F1: Encendiendo el láser y el LED")
             laser()
+            luz_exterior = True
         time.sleep(5) # Espera 5 segundos antes de repetir
 
 
@@ -402,8 +426,44 @@ def set_demultiplexer(value):
     print(PIN_B)
     print(PIN_C)
 
+#LASER
 
-# * No tomar en cuenta esta seccion de codigo
+@app.route('/api/Luz_Exterior', methods=['POST'])
+def handle_data4():
+
+    data = request.json
+    global luz_exterior
+# Aquí puedes hacer lo que necesites con la variable 'selected_area'
+    estado_luz = data.get('index')
+    if estado_luz == "encendido":
+        luz_exterior= True
+    else:
+        luz_exterior= False
+    
+    return jsonify({'error': 'informacion no proporcionada'}), 400
+
+@app.route('/api/estado_Luz_exterior', methods=['GET'])
+def handle_data_5():
+    global luz_exterior
+    luz = luz_exterior
+    if luz_exterior is None:
+        return jsonify({"error": "El estado de la luz no ha sido configurado a�n"}), 404
+    
+    return jsonify({"estado_luz exterior": luz}), 200   
+
+# --- metodo get para la alarma
+@app.route('/api/estado_alarma', methods=['GET'])
+def handle_data_6():
+    global alarmaEncendida
+    alarma = alarmaEncendida
+    if alarmaEncendida is None:
+        return jsonify({"error": "El estado de la alarma no ha sido configurado aun"}), 404
+    
+    return jsonify({"estado_alarma exterior": alarma}), 200   
+
+    
+
+# LUCES
 @app.route('/api/onLED', methods=['POST'])
 def handle_data():
     data = request.json
@@ -436,6 +496,7 @@ try:
         if crear == True:
             if __name__ == '__main__':
                 setup()
+                
                 crear = False
                 app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
         
