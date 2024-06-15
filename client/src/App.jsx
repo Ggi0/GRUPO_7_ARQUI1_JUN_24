@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 function App() {
@@ -7,19 +7,23 @@ function App() {
 
   const handleAreaChange = (event) => {
     setSelectedArea(event.target.value);
+    console.log('Selected index:', event.target.value);
   };
 
+  //asdf
+  // * Iluminación encendida
   const sendDataToServer = async () => {
     try {
       await axios.post('http://127.0.0.1:8000/api/onLED', {
-        area: selectedArea
+        index: selectedArea
       });
-      console.log('Datos enviados correctamente.');
+      console.log('Datos enviados correctamente. ' + selectedArea);
     } catch (error) {
       console.error('Error al enviar los datos:', error);
     }
   };
 
+  // * Iluminación apagada
   const sendDataToServer_1 = async () => {
     try {
       await axios.post('http://127.0.0.1:8000/api/offLED', {
@@ -30,6 +34,103 @@ function App() {
       console.error('Error al enviar los datos:', error);
     }
   };
+
+  // * codigo de la recepcion
+  const [clientes] = useState(0);
+
+  useEffect(() => {
+    // Función para obtener datos del servidor
+    const fetchClientes = async () => {
+      try {
+        await axios.get('URL_DE_TU_API');
+        //setClientes(response.data.cantidadClientes); // Ajusta según la estructura de tu respuesta
+        console.log('Estado enviado correctamente.');
+      } catch (error) {
+        console.error('Error al obtener los datos', error);
+      }
+    };
+
+    fetchClientes();
+  }, []);
+
+  // * Codigo de la cinta transportadora
+  const [bandaTransportadora, setBandaTransportadora] = useState(false);
+  const [statusBanda, setStatusBanda] = useState('detenida'); // Initial state for the status of the conveyor belt 
+
+  const handleCheckboxChange = (event) => {
+    const isChecked = event.target.checked;
+    setBandaTransportadora(isChecked);
+    const nuevoStatusBanda = isChecked ? 'en movimiento' : 'detenida';
+    setStatusBanda(nuevoStatusBanda);
+    // Envía el estado al servidor Flask
+    enviarEstadoAlServidor(isChecked);
+  };
+
+  const enviarEstadoAlServidor = async (isChecked) => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/activarMotor', {
+        estado: isChecked ? 1 : 0
+      });
+      console.log('Estado enviado correctamente.');
+
+    } catch (error) {
+      console.error('Error al enviar el estado:', error);
+    }
+  };
+
+  // * Codigo del porton automatico
+  const [portonAutomatico, setPortonAutomatico] = useState(false);
+  const [statusPorton, setStatusPorton] = useState('cerrado'); // Estado inicial del portón [abierto, cerrado]   
+
+  const handleCheckboxChangeServo = (event) => {
+    const isChecked = event.target.checked;
+    setPortonAutomatico(isChecked);
+
+    if (isChecked) {
+      setStatusPorton('Abriendo Porton'); // Cambia el estado del portón a abierto 
+      setTimeout(() => {
+        setStatusPorton('Abierto');
+      }, 3000); // Ajusta el tiempo según sea necesario 
+    } else {
+      setStatusPorton('Cerrando Porton'); // Cambia el estado del portón a cerrado 
+      setTimeout(() => {
+        setStatusPorton('Cerrado');
+      }, 3000); // Ajusta el tiempo según sea necesario 
+    }
+
+    // Envía el estado al servidor Flask
+    enviarEstadoAlServidorServo(isChecked);
+  }
+
+  const enviarEstadoAlServidorServo = async (isChecked) => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/activarServoMotor', {
+        estado: isChecked ? 1 : 0
+      });
+      console.log('Estado enviado correctamente.');
+    }
+    catch (error) {
+      console.error('Error al enviar el estado:', error);
+    }
+  };
+
+  // * Codigo de la alarma
+  const [alarma] = useState(false);
+
+  useEffect(() => {
+    // Función para obtener datos del servidor
+    const fetchAlarma = async () => {
+      try {
+        await axios.get('URL_DE_TU_API');
+        //setAlarma(response.data.cantidadClientes); // Ajusta según la estructura de tu respuesta
+        console.log('Estado enviado correctamente.');
+      } catch (error) {
+        console.error('Error al obtener los datos', error);
+      }
+    };
+
+    fetchAlarma();
+  }, []);
 
   const portfolioItems = [
     { id: 1, imgSrc: "./src/assets/img/portfolio/ilumina.jpg", alt: "Ilumina", modalId: "#portfolio-modal-1" },
@@ -172,12 +273,12 @@ function App() {
                     <hr className="star-dark mb-5" />
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/ilumina_1.jpg" style={{ width: 'auto', height: 'auto' }} alt="iluminación" />
                     <form>
-                      {['Recepción', 'Conferencias', 'Trabajo', 'Administrativa', 'Carga y Descarga', 'Cafetería', 'Baño', 'Exterior'].map((area, index) => (
+                      {['Recepción', 'Administrativa', 'Baño', 'Conferencias', 'Carga y Descarga', 'Exterior', 'Cafetería', 'Trabajo'].map((area, index) => (
                         <div className="form-check" style={{ paddingLeft: '100px', boxShadow: '0px 0px 4px' }} key={index}>
                           <input className="form-check-input"
                             type="radio" id={`formCheck-${9 + index}`}
                             name="flexRadioDefault"
-                            value={area}
+                            value={index}
                             onChange={handleAreaChange} />
                           <label className="form-check-label" htmlFor={`formCheck-${9 + index}`}>{area}</label>
                         </div>
@@ -216,7 +317,7 @@ function App() {
                     <hr className="star-dark mb-5" />
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/recepcion.png" style={{ width: 'auto', height: 'auto' }} alt="Recepción" />
                     <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Cantidad de Clientes en la Sucursal:&nbsp;</label>
-                    <span style={{ fontSize: '20px' }}>25</span>
+                    <span style={{ fontSize: '20px' }}>{clientes}</span>
                   </div>
                 </div>
               </div>
@@ -245,9 +346,17 @@ function App() {
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/cinta_1.png" />
                     <form>
                       <div className="form-check form-switch">
-                        <input className="form-check-input" type="checkbox" id="formCheck-1" style={{ width: '42px', height: '26px' }} />
-                        <label className="form-check-label" htmlFor="formCheck-1" style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Banda transportadora</label>
+                        <input className="form-check-input"
+                          type="checkbox" id="formCheck-1"
+                          style={{ width: '42px', height: '26px' }}
+                          checked={bandaTransportadora}
+                          onChange={handleCheckboxChange} />
+                        <label className="form-check-label"
+                          htmlFor="formCheck-1"
+                          style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Banda transportadora</label>
                       </div>
+                      <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Estado:&nbsp;</label>
+                      <span style={{ fontSize: '20px' }}>{statusBanda}</span>
                     </form>
                   </div>
                 </div>
@@ -277,9 +386,15 @@ function App() {
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/porton.png" />
                     <form>
                       <div className="form-check form-switch">
-                        <input className="form-check-input" type="checkbox" id="formCheck-2" style={{ width: '42px', height: '26px' }} />
+                        <input className="form-check-input"
+                          type="checkbox" id="formCheck-2"
+                          style={{ width: '42px', height: '26px' }}
+                          checked={portonAutomatico}
+                          onChange={handleCheckboxChangeServo} />
                         <label className="form-check-label" htmlFor="formCheck-2" style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Porton</label>
                       </div>
+                      <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Estado:&nbsp;</label>
+                      <span style={{ fontSize: '20px' }}>{statusPorton}</span>
                     </form>
                   </div>
                 </div>
@@ -308,7 +423,7 @@ function App() {
                     <hr className="star-dark mb-5" />
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/alarma_1.jpg" />
                     <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Estado de la Alarma:&nbsp;</label>
-                    <span style={{ fontSize: '20px' }}>ACTIVADO</span>
+                    <span style={{ fontSize: '20px' }}>{alarma}</span>
                   </div>
                 </div>
               </div>
