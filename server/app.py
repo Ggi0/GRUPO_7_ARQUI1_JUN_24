@@ -77,8 +77,7 @@ iniciar_stepper = True
 # Control creacion de api
 crear = True
 
-#Funcion para activar el servo motor{
-
+#Funcion para activar el servo motor
 def init_servo(pin, frequency=50):
     global pwm
     """
