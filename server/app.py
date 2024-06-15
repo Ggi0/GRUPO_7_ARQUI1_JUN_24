@@ -24,12 +24,18 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
 #Declaracion de puerto GPIO
+#MOTORES
 LED1 = 11
 MOTOR = 13
 PIN_IN1_STEPPER = 31
 PIN_IN2_STEPPER = 33
 PIN_IN3_STEPPER = 35
 PIN_IN4_STEPPER = 37
+
+#LUCES CUARTOS
+PIN_A = 18
+PIN_B = 22
+PIN_C = 23
 
 
 #Numero de puertos motor stepper utilizados para su programacion
@@ -207,12 +213,18 @@ def ver_estado_motor():
 #Codigo que se ejecuta solo una vez
 def setup():
     #Declaracion de GPIO input o output
+    #MOTOR
     GPIO.setup(LED1, GPIO.OUT)
     GPIO.setup(MOTOR, GPIO.OUT)
     GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN4_STEPPER,GPIO.OUT)
+
+    #LUCES CUARTOS
+    GPIO.setup(PIN_A, GPIO.OUT)
+    GPIO.setup(PIN_B, GPIO.OUT)
+    GPIO.setup(PIN_C, GPIO.OUT)
 
     #Iniciar apagados los puertos
     GPIO.output(LED1, 0)
@@ -222,12 +234,28 @@ def setup():
     GPIO.output(PIN_IN3_STEPPER,0)
     GPIO.output(PIN_IN4_STEPPER,0)
 
+
+
+
+#LUCES CUARTOS
+def decimal_to_binary(decimal):
+    binary = format(decimal, '03b')
+    return [int(bit) for bit in binary]
+
+def set_demultiplexer(value):
+    binary_value = decimal_to_binary(value)
+    GPIO.output(PIN_A, binary_value[0])
+    GPIO.output(PIN_B, binary_value[1])
+    GPIO.output(PIN_C, binary_value[2])
+
 # * No tomar en cuenta esta seccion de codigo
 @app.route('/api/onLED', methods=['POST'])
 def handle_data():
     data = request.json
-    selected_area = data.get('area')
+    selected_area = data.get('index')
     # Aquí puedes hacer lo que necesites con la variable 'selected_area'
+    binario = decimal_to_binary(selected_area)
+    set_demultiplexer(selected_area) 
     print("Área seleccionada:", selected_area)
     return 'Datos recibidos correctamente'
 
