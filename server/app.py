@@ -19,6 +19,11 @@ estado_motor = None
 estado_servo= None
 
 pwm = None
+
+#variables laser 
+luz_recibida1 = None
+luz_recibida2 = None
+
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
 
@@ -42,6 +47,20 @@ PIN_C = 23
 
 #SERVOMOTOR
 PIN_SERVO = 12
+
+# ---------- LASER -----------
+# laser
+PIN_LASER = 38 #GPIO20
+
+# fotoresistencia
+PIN_F1 = 11 # GPIO17 
+PIN_F2 = 21 # GPIO19
+
+# buzzer
+PIN_BUZZER = 40 #GPIO21
+
+# Luz externa
+PIN_LEDf = 36 #GPIO16
 
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
@@ -79,6 +98,34 @@ iniciar_stepper = True
 # Control creacion de api
 crear = True
 
+#Funciones Laser 
+def laser():
+    global luz_recibida2
+    luz_recibida2 = GPIO.input(PIN_F2)
+    
+    GPIO.output(PIN_LASER, GPIO.HIGH)
+    GPIO.output(PIN_LEDf, GPIO.HIGH)
+    
+    if luz_recibida2:
+        print("Mucha luz en FOTORESISTENCIA2: Apagando el buzzer")
+        GPIO.output(PIN_BUZZER, GPIO.LOW)
+    else:
+        print("Poca luz en FOTORESISTENCIA2: Encendiendo el buzzer")
+        GPIO.output(PIN_BUZZER, GPIO.HIGH)
+        
+def fotoresistencia1():
+    global luz_recibida1
+    luz_recibida1 = GPIO.input(PIN_F1)
+    while True:
+        if luz_recibida1:
+            print("Mucha luz en FOTORESISTENCIA1: Apagando el láser y el LED")
+            GPIO.output(PIN_LASER, GPIO.LOW)
+            GPIO.output(PIN_LEDf, GPIO.LOW)
+        else:
+            print("Poca luz en F1: Encendiendo el láser y el LED")
+            laser()
+        time.sleep(5) # Espera 5 segundos antes de repetir       
+
 #Funcion para activar el servo motor
 def init_servo(pin, frequency=50):
     global pwm
@@ -112,17 +159,6 @@ def stop_servo(pwm):
     pwm.ChangeDutyCycle(0)
     pwm.stop()
     GPIO.cleanup()
-
-
-#Funcion para activar el puerto especifico y en un estado especifico
-def controlar_gpio(puerto,estado):
-    if puerto == 1:
-        GPIO.output(LED1, estado)
-    elif puerto == 2:
-        GPIO.output(MOTOR, estado)
-    else:
-        print("No existe el puerto para activarlo.")  
-
 
 def activar_motor_stepper():
     global StepCount
@@ -171,6 +207,8 @@ def pause_motor():
 def resume_motor():
     pause.set()
     print("Motor reanudado")
+    
+    
 
 @app.route('/api/activarLed', methods=['POST'])
 def activar_led():
@@ -192,8 +230,6 @@ def activar_led():
     
     if not found:
         leds.append({"cuarto": cuarto, "estado": estado})
-
-    controlar_gpio(cuarto,estado)
     
     return jsonify({"mensaje": "Estado del LED actualizado correctamente"}), 200
 
@@ -300,7 +336,14 @@ def setup():
     GPIO.setup(PIN_C, GPIO.OUT)
 
     #SERVOMOTOR
-    # GPIO.setup(PIN_SERVO, GPIO.OUT)
+    GPIO.setup(PIN_SERVO, GPIO.OUT)
+    
+     # ---- LASER ----
+    GPIO.setup(PIN_LASER, GPIO.OUT)
+    GPIO.setup(PIN_LEDf, GPIO.OUT)
+    GPIO.setup(PIN_BUZZER, GPIO.OUT)
+    GPIO.setup(PIN_F1, GPIO.IN)
+    GPIO.setup(PIN_F2, GPIO.IN)
 
     #Iniciar apagados los puertos
     GPIO.output(PIN_IN1_STEPPER,0)
