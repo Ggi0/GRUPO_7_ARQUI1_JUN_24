@@ -26,12 +26,14 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
 #Declaracion de puerto GPIO
-LED1 = 11
-MOTOR = 13
+# LED verde es el pin 29 con GPIO 5
+# LED Roja es el pin 16 con GPIo 23
 PIN_IN1_STEPPER = 31
 PIN_IN2_STEPPER = 33
 PIN_IN3_STEPPER = 35
 PIN_IN4_STEPPER = 37
+PIN_IN5_LEDGREEN = 29
+PIN_IN6_LEDRED = 16
 
 #LUCES CUARTOS
 PIN_A = 18
@@ -66,7 +68,7 @@ StepCounter = 0
 if len(sys.argv)>1:
   WaitTime = int(sys.argv[1])/float(1000)
 else:
-  WaitTime = 10/float(1000)
+  WaitTime = 5/float(1000)
 
 # Control de los hilos
 running = False
@@ -159,6 +161,8 @@ def stop_motor():
     global running
     running = False
     print("Motor detenido")
+    
+
 
 def pause_motor():
     pause.clear()
@@ -227,9 +231,13 @@ def activar_motor():
         print(PIN_IN2_STEPPER)
         print(PIN_IN3_STEPPER)
         print(PIN_IN4_STEPPER)
+        GPIO.output(PIN_IN5_LEDGREEN, 1)
+        GPIO.output(PIN_IN6_LEDRED,   0)
     else:
         stop_motor()
         print("Motor detenido")
+        GPIO.output(PIN_IN5_LEDGREEN, 0)
+        GPIO.output(PIN_IN6_LEDRED,   1)
     
         
     #Tambien la opcion de detener totalmente el motor pero hay que inicializar de nuevo
@@ -237,15 +245,6 @@ def activar_motor():
     #stop_motor()
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
-
-@app.route('/api/verEstadoMotor', methods=['GET'])
-def ver_estado_motor():
-    global estado_motor
-
-    if estado_motor is None:
-        return jsonify({"error": "El estado del motor no ha sido configurado aún"}), 404
-    
-    return jsonify({"estado_motor": estado_motor}), 200
 
 #SERVOMOTOR
 @app.route('/api/activarServoMotor', methods=['POST'])
@@ -281,20 +280,15 @@ def activar_servomotor():
     #stop_motor()
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
-
-@app.route('/api/verEstadoServoMotor', methods=['GET'])
-def ver_estado_servomotor():
-    global estado_servo
-
-    if estado_servo is None:
-        return jsonify({"error": "El estado del motor no ha sido configurado a�n"}), 404
-    
-    return jsonify({"estado_motor": estado_motor}), 200    
+   
 #Codigo que se ejecuta solo una vez
 def setup():
     #Declaracion de GPIO input o output
-    GPIO.setup(LED1, GPIO.OUT)
-    GPIO.setup(MOTOR, GPIO.OUT)
+    # LEDS DEL MOTOR STEPPER
+    GPIO.setup(PIN_IN5_LEDGREEN, GPIO.OUT)
+    GPIO.setup(PIN_IN6_LEDRED, GPIO.OUT)
+    
+    #MOTOR STEPPER
     GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
@@ -306,15 +300,15 @@ def setup():
     GPIO.setup(PIN_C, GPIO.OUT)
 
     #SERVOMOTOR
-    GPIO.setup(PIN_SERVO, GPIO.OUT)
+    # GPIO.setup(PIN_SERVO, GPIO.OUT)
 
     #Iniciar apagados los puertos
-    GPIO.output(LED1, 0)
-    GPIO.output(MOTOR, 0)
     GPIO.output(PIN_IN1_STEPPER,0)
     GPIO.output(PIN_IN2_STEPPER,0)
     GPIO.output(PIN_IN3_STEPPER,0)
     GPIO.output(PIN_IN4_STEPPER,0)
+    GPIO.output(PIN_IN5_LEDGREEN,0)
+    GPIO.output(PIN_IN6_LEDRED, 1)
 
 
 #LUCES CUARTOS
@@ -333,7 +327,7 @@ def set_demultiplexer(value):
     print(PIN_C)
 
 
-# * No tomar en cuenta esta seccion de codigo
+# * en cuenta esta seccion de codigo
 @app.route('/api/onLED', methods=['POST'])
 def handle_data():
     data = request.json
