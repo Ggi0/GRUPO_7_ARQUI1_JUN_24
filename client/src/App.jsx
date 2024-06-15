@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+// * Componente principal de la aplicación
 function App() {
 
   const [selectedArea, setSelectedArea] = useState('');
