@@ -3,7 +3,6 @@ import axios from 'axios'
 
 function App() {
 
-  // * Codigo de la iluminacion
   const [selectedArea, setSelectedArea] = useState('');
 
   const handleAreaChange = (event) => {
@@ -87,6 +86,9 @@ function App() {
     const isChecked = event.target.checked;
     setPortonAutomatico(isChecked);
 
+    // Envía el estado al servidor Flask
+    enviarEstadoAlServidorServo(isChecked);
+
     if (isChecked) {
       setStatusPorton('Abriendo Porton'); // Cambia el estado del portón a abierto 
       setTimeout(() => {
@@ -98,9 +100,6 @@ function App() {
         setStatusPorton('Cerrado');
       }, 3000); // Ajusta el tiempo según sea necesario 
     }
-
-    // Envía el estado al servidor Flask
-    enviarEstadoAlServidorServo(isChecked);
   }
 
   const enviarEstadoAlServidorServo = async (isChecked) => {
@@ -132,6 +131,28 @@ function App() {
 
     fetchAlarma();
   }, []);
+
+  // Iluminacion Exterior
+  const [iluminacionExterior, setIluminacionExterior] = useState(false);
+
+  const handleCheckboxChangeIluminacion = (event) => {
+    const isChecked = event.target.checked;
+    setIluminacionExterior(isChecked);
+    // Envía el estado al servidor Flask
+    enviarEstadoAlServidorIluminacion(isChecked);
+  }
+
+  const enviarEstadoAlServidorIluminacion = async (isChecked) => {
+    try {
+      await axios.post('http://127.0.0.1:8000/api/activarLEDOut', {
+        estado: isChecked ? 1 : 0
+      });
+      console.log('Estado enviado correctamente.');
+    }
+    catch (error) {
+      console.error('Error al enviar el estado:', error);
+    }
+  };
 
   const portfolioItems = [
     { id: 1, imgSrc: "./src/assets/img/portfolio/ilumina.jpg", alt: "Ilumina", modalId: "#portfolio-modal-1" },
@@ -274,7 +295,7 @@ function App() {
                     <hr className="star-dark mb-5" />
                     <img className="img-fluid mb-5" src="./src/assets/img/portfolio/ilumina_1.jpg" style={{ width: 'auto', height: 'auto' }} alt="iluminación" />
                     <form>
-                      {['Recepción', 'Administrativa', 'Baño', 'Conferencias', 'Carga y Descarga', 'Exterior', 'Cafetería', 'Trabajo'].map((area, index) => (
+                      {['Recepción', 'Administrativa', 'Baño', 'Conferencias', 'Carga y Descarga', 'Jardin', 'Cafetería', 'Trabajo'].map((area, index) => (
                         <div className="form-check" style={{ paddingLeft: '100px', boxShadow: '0px 0px 4px' }} key={index}>
                           <input className="form-check-input"
                             type="radio" id={`formCheck-${9 + index}`}
@@ -420,9 +441,20 @@ function App() {
               <div className="container text-center">
                 <div className="row">
                   <div className="col-lg-8 mx-auto">
-                    <h2 className="text-uppercase text-secondary mb-0">alarma perimetral</h2>
+                    <h2 className="text-uppercase text-secondary mb-0">Area perimetral</h2>
                     <hr className="star-dark mb-5" />
-                    <img className="img-fluid mb-5" src="./src/assets/img/portfolio/alarma_1.jpg" />
+                    <img className="img-fluid mb-5" src="./src/assets/img/portfolio/exterior.jpg" />
+                    <div className="form-check form-switch">
+                      <input className="form-check-input"
+                        type="checkbox" id="formCheck-1"
+                        style={{ width: '42px', height: '26px' }}
+                        checked={iluminacionExterior}
+                        onChange={handleCheckboxChangeIluminacion} />
+                      <label className="form-check-label"
+                        htmlFor="formCheck-1"
+                        style={{ boxShadow: '0px 0px 4px', fontSize: '20px', paddingRight: '10px', paddingLeft: '10px' }}>Iluminación Exterior</label>
+                    </div>
+                    <br></br>
                     <label className="form-label" style={{ fontSize: '20px', textShadow: '0px 0px' }}>Estado de la Alarma:&nbsp;</label>
                     <span style={{ fontSize: '20px' }}>{alarma}</span>
                   </div>
