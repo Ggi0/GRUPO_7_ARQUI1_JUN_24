@@ -16,7 +16,9 @@ leds = []
 
 # Variable para almacenar el estado del motor
 estado_motor = None
+estado_servo= None
 
+pwm = None
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
 
@@ -36,7 +38,8 @@ PIN_A = 18
 PIN_B = 22
 PIN_C = 23
 
-
+#SERVOMOTOR
+PIN_SERVO = 12
 
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
@@ -73,6 +76,42 @@ iniciar_stepper = True
 
 # Control creacion de api
 crear = True
+
+#Funcion para activar el servo motor{
+
+def init_servo(pin, frequency=50):
+    global pwm
+    """
+    Inicializa el servo motor en el pin especificado con la frecuencia dada.
+    """
+    if pwm is not None:
+        pwm.stop()
+        GPIO.cleanup(pin)
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(pin, GPIO.OUT)
+    pwm = GPIO.PWM(pin, frequency)
+    pwm.start(0)
+    return pwm
+
+def move_servo(pwm, angle):
+    """
+    Mueve el servo motor al �ngulo especificado.
+    """
+    duty_cycle = angle / 18.0 + 2.5
+    pwm.ChangeDutyCycle(duty_cycle)
+    time.sleep(50)  # Aumentar el tiempo para asegurar que el servo se mueva
+    #pwm.ChangeDutyCycle(duty_cycle)  # Mant�n el pulso activo para asegurar el movimiento
+    #time.sleep(0.5)  # Asegurar tiempo suficiente para que el servo se mueva completamente
+    pwm.ChangeDutyCycle(0)  # Detener el pulso para no mantener el servo en movimiento
+
+def stop_servo(pwm):
+    """
+    Detiene el servo motor.
+    """
+    pwm.ChangeDutyCycle(0)
+    pwm.stop()
+    GPIO.cleanup()
+
 
 #Funcion para activar el puerto especifico y en un estado especifico
 def controlar_gpio(puerto,estado):
@@ -169,6 +208,7 @@ def ver_estado_led():
     
     return jsonify({"error": "Cuarto no encontrado"}), 404
 
+#MOTOR STEPPER
 @app.route('/api/activarMotor', methods=['POST'])
 def activar_motor():
     global estado_motor
@@ -208,8 +248,49 @@ def ver_estado_motor():
     
     return jsonify({"estado_motor": estado_motor}), 200
 
-    
+#SERVOMOTOR
+@app.route('/api/activarServoMotor', methods=['POST'])
+def activar_servomotor():
 
+    global estado_servo
+    global pwm
+    
+    data = request.json
+    estado = data.get('estado')
+    pwm = init_servo(PIN_SERVO)
+    angle = 90
+
+    if not isinstance(estado, int):
+        return jsonify({"error": "El par�metro 'estado' debe ser num�rico"}), 400
+
+    estado_servo = estado
+     #Codigo para activar motor
+    if estado_servo == 1:
+        move_servo(pwm, angle)
+        print("Motor activado")
+        print(PIN_SERVO)
+
+    else:
+        angle = 0
+        move_servo(pwm, angle)
+        print("Puerta cerrada")
+        print(PIN_SERVO)
+    
+        
+    #Tambien la opcion de detener totalmente el motor pero hay que inicializar de nuevo
+    #Es con la siguiente linea
+    #stop_motor()
+    
+    return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
+
+@app.route('/api/verEstadoServoMotor', methods=['GET'])
+def ver_estado_servomotor():
+    global estado_servo
+
+    if estado_servo is None:
+        return jsonify({"error": "El estado del motor no ha sido configurado a�n"}), 404
+    
+    return jsonify({"estado_motor": estado_motor}), 200    
 #Codigo que se ejecuta solo una vez
 def setup():
     #Declaracion de GPIO input o output
@@ -225,6 +306,9 @@ def setup():
     GPIO.setup(PIN_B, GPIO.OUT)
     GPIO.setup(PIN_C, GPIO.OUT)
 
+    #SERVOMOTOR
+    GPIO.setup(PIN_SERVO, GPIO.OUT)
+
     #Iniciar apagados los puertos
     GPIO.output(LED1, 0)
     GPIO.output(MOTOR, 0)
@@ -236,8 +320,8 @@ def setup():
 
 #LUCES CUARTOS
 def decimal_to_binary(decimal):
-    print(decimal)
-    binary = format(decimal, '03b')
+    print("recibido "+ str(decimal))
+    binary = format(int(decimal), '03b')
     return [int(bit) for bit in binary]
 
 def set_demultiplexer(value):
@@ -245,6 +329,9 @@ def set_demultiplexer(value):
     GPIO.output(PIN_A, binary_value[0])
     GPIO.output(PIN_B, binary_value[1])
     GPIO.output(PIN_C, binary_value[2])
+    print(PIN_A)
+    print(PIN_B)
+    print(PIN_C)
 
 
 # * No tomar en cuenta esta seccion de codigo
@@ -253,12 +340,16 @@ def handle_data():
     data = request.json
     # Aquí puedes hacer lo que necesites con la variable 'selected_area'
     selected_area = data.get('index')
-    selected_area = int(selected_area)
-    print(selected_area)
-    binario = decimal_to_binary(selected_area)
-    set_demultiplexer(binario)
-    print("Área seleccionada:", selected_area)
-    return 'Datos recibidos correctamente'
+    if selected_area is not None:
+
+        set_demultiplexer(int(selected_area))
+        print("Área seleccionada:", selected_area)
+
+        
+        return jsonify({'message': 'Datos recibidos correctamente'})
+        
+
+    return jsonify({'error': 'indice no proporcionado'}), 400
 
 @app.route('/api/offLED', methods=['POST'])
 def handle_data_1():
