@@ -1,58 +1,85 @@
 import RPi.GPIO as GPIO
 import time
 
-# Configurar los pines del sensor ultrasónico y los LEDs
-GPIO.setmode(GPIO.BOARD)
-TRIG = 11
-ECHO = 13
-LED_PINS = [15, 16, 18, 22]  # Pines GPIO de los LEDs
-GPIO.setup(TRIG, GPIO.OUT)
-GPIO.setup(ECHO, GPIO.IN)
-for pin in LED_PINS:
-    GPIO.setup(pin, GPIO.OUT)
+class UltrasonicSensorController:
+    def __init__(self, trig_pin=11, echo_pin=13, led_a=15, led_b=16, led_c=18, led_d=22):
+        """
+        Constructor de la clase UltrasonicSensorController.
+        
+        Configura los pines GPIO y otros parámetros iniciales.
+        
+        Args:
+        - trig_pin: Número del pin GPIO conectado al pin de trigger del sensor ultrasónico.
+        - echo_pin: Número del pin GPIO conectado al pin de echo del sensor ultrasónico.
+        - led_a, led_b, led_c, led_d: Números de pines GPIO conectados a los LEDs.
+        """
+        self.trig_pin = trig_pin
+        self.echo_pin = echo_pin
+        self.led_a = led_a
+        self.led_b = led_b
+        self.led_c = led_c
+        self.led_d = led_d
+        self.counter = 0
 
-# Inicializar contador global
-contador = 0
+        # Configuración de los pines GPIO
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self.trig_pin, GPIO.OUT)
+        GPIO.setup(self.echo_pin, GPIO.IN)
+        GPIO.setup(self.led_a, GPIO.OUT)
+        GPIO.setup(self.led_b, GPIO.OUT)
+        GPIO.setup(self.led_c, GPIO.OUT)
+        GPIO.setup(self.led_d, GPIO.OUT)
 
-# Función para medir la distancia
-def medir_distancia():
-    GPIO.output(TRIG, False)
-    time.sleep(0.1)
+    def measure_distance(self):
+        """
+        Mide la distancia utilizando el sensor ultrasónico.
+        
+        Returns:
+        - distance: Distancia medida en centímetros.
+        """
+        GPIO.output(self.trig_pin, False)
+        time.sleep(0.1)
 
-    GPIO.output(TRIG, True)
-    time.sleep(0.00001)
-    GPIO.output(TRIG, False)
+        GPIO.output(self.trig_pin, True)
+        time.sleep(0.00001)
+        GPIO.output(self.trig_pin, False)
 
-    inicio_tiempo = time.time()
-    fin_tiempo = time.time()
+        start_time = time.time()
+        stop_time = time.time()
 
-    while GPIO.input(ECHO) == 0:
-        inicio_tiempo = time.time()
+        while GPIO.input(self.echo_pin) == 0:
+            start_time = time.time()
 
-    while GPIO.input(ECHO) == 1:
-        fin_tiempo = time.time()
+        while GPIO.input(self.echo_pin) == 1:
+            stop_time = time.time()
 
-    duracion = fin_tiempo - inicio_tiempo
-    distancia = (duracion * 34300) / 2
+        duration = stop_time - start_time
+        distance = (duration * 34300) / 2
 
-    return distancia
+        return distance
 
-# Función para encender los LEDs según el contador
-def encender_leds():
-    global contador
-    binario = bin(contador)[2:].zfill(4)  # Convertir el contador a binario de 4 bits
-    for i, bit in enumerate(binario):
-        GPIO.output(LED_PINS[i], int(bit))
+    def update_leds(self):
+        """
+        Actualiza los LEDs según el contador binario.
+        """
+        binary_counter = bin(self.counter)[2:].zfill(4)
+        GPIO.output(self.led_a, int(binary_counter[0]))
+        GPIO.output(self.led_b, int(binary_counter[1]))
+        GPIO.output(self.led_c, int(binary_counter[2]))
+        GPIO.output(self.led_d, int(binary_counter[3]))
 
-try:
-    while True:
-        distancia = medir_distancia()
-        if distancia <= 4:
-            contador += 1
-            print("Movimiento detectado. Contador:", contador)
-            encender_leds()
-        time.sleep(0.5)  # Puedes ajustar este tiempo según tus necesidades
-
-except KeyboardInterrupt:
-    print("Deteniendo el programa")
-    GPIO.cleanup()
+    def run(self):
+        """
+        Función principal que ejecuta el programa.
+        """
+        try:
+            while True:
+                distance = self.measure_distance()
+                if distance <= 4:
+                    self.counter += 1
+                    print("Movement detected. Counter:", self.counter)
+                    self.update_leds()
+                time.sleep(0.5)
+        except KeyboardInterrupt:
+            print("Stopping program")
+            GPIO.cleanup()
