@@ -34,15 +34,12 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
 #Declaracion de puerto GPIO
-<<<<<<< HEAD
 #MOTOR STEPPER 
 #el pin 11 a 13 no se estan usan
 LED1 = 11
 MOTOR = 13
-=======
 # LED verde es el pin 29 con GPIO 5
 # LED Roja es el pin 16 con GPIo 23
->>>>>>> pluto
 PIN_IN1_STEPPER = 31
 PIN_IN2_STEPPER = 33
 PIN_IN3_STEPPER = 35
@@ -74,11 +71,10 @@ PIN_BUZZER = 40 #GPIO21
 # Luz externa
 PIN_LEDf = 36 #GPIO16
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> pluto
+
+
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
 
@@ -115,11 +111,6 @@ iniciar_stepper = True
 # Control creacion de api
 crear = True
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> pluto
 #Funciones Laser 
 
 def luz_exterior():
@@ -148,18 +139,11 @@ def laser():
     else:
         print("Poca luz en FOTORESISTENCIA2: Encendiendo el buzzer")
         GPIO.output(PIN_BUZZER, GPIO.HIGH)
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+
         
     
 
 
->>>>>>> a2d19564321eb09bf9959f24fece4b6656d682c5
-
-=======
-        
->>>>>>> pluto
 def fotoresistencia1():
     global luz_recibida1
     global luz_exterior
@@ -172,20 +156,15 @@ def fotoresistencia1():
         else:
             print("Poca luz en F1: Encendiendo el láser y el LED")
             laser()
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+
             luz_exterior = True
->>>>>>> a2d19564321eb09bf9959f24fece4b6656d682c5
+
         time.sleep(5) # Espera 5 segundos antes de repetir
 
 
 
 
 
-=======
-        time.sleep(5) # Espera 5 segundos antes de repetir       
->>>>>>> pluto
 
 #Funcion para activar el servo motor
 def init_servo(pin, frequency=50):
@@ -381,18 +360,16 @@ def activar_servomotor():
 #Codigo que se ejecuta solo una vez
 def setup():
     #Declaracion de GPIO input o output
-<<<<<<< HEAD
     #GPIO.setup(LED1, GPIO.OUT)
     
     # ---- MOTORES ----
     GPIO.setup(MOTOR, GPIO.OUT)
-=======
+    
     # LEDS DEL MOTOR STEPPER
     GPIO.setup(PIN_IN5_LEDGREEN, GPIO.OUT)
     GPIO.setup(PIN_IN6_LEDRED, GPIO.OUT)
     
     #MOTOR STEPPER
->>>>>>> pluto
     GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
     GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
@@ -413,7 +390,6 @@ def setup():
     GPIO.setup(PIN_F1, GPIO.IN)
     GPIO.setup(PIN_F2, GPIO.IN)
 
-<<<<<<< HEAD
     # ---- LASER ----
     GPIO.setup(PIN_LASER, GPIO.OUT)
     GPIO.setup(PIN_LEDf, GPIO.OUT)
@@ -425,9 +401,8 @@ def setup():
     # ----- Iniciar apagados los puertos -------
     GPIO.output(LED1, 0)
     GPIO.output(MOTOR, 0)
-=======
+    
     #Iniciar apagados los puertos
->>>>>>> pluto
     GPIO.output(PIN_IN1_STEPPER,0)
     GPIO.output(PIN_IN2_STEPPER,0)
     GPIO.output(PIN_IN3_STEPPER,0)
@@ -454,17 +429,15 @@ def set_demultiplexer(value):
 
 #LASER
 
-<<<<<<< HEAD
 # * en cuenta esta seccion de codigo
-=======
 @app.route('/api/Luz_Exterior', methods=['POST'])
 def handle_data4():
 
     data = request.json
     global luz_exterior
 # Aquí puedes hacer lo que necesites con la variable 'selected_area'
-    estado_luz = data.get('index')
-    if estado_luz == "encendido":
+    estado_luz = data.get('estado')
+    if estado_luz == 1:
         luz_exterior= True
     else:
         luz_exterior= False
@@ -493,7 +466,6 @@ def handle_data_6():
     
 
 # LUCES
->>>>>>> a2d19564321eb09bf9959f24fece4b6656d682c5
 @app.route('/api/onLED', methods=['POST'])
 def handle_data():
     data = request.json
