@@ -4,6 +4,7 @@ import RPi.GPIO as GPIO
 import sys
 import time
 import threading
+from RPLCD.i2c import CharLCD
 
 # * Initialize Flask app
 app = Flask(__name__)
@@ -26,6 +27,21 @@ luz_recibida1 = None
 luz_recibida2 = None
 luz_exterior = False
 alarmaEncendida = False
+
+#variables LCD
+nombres_habitaciones = [
+    "Recepcion",
+    "Administracion",
+    "Bano",
+    "Conferencia",
+    "Area de Descarga",
+    "Patio",
+    "Cafeteria",
+    "Bodega"
+]
+
+cuarto_luz = None
+pantalla = CharLCD('PCF8574', 0x27, auto_linebreaks=True)
 
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
@@ -110,6 +126,97 @@ iniciar_stepper = True
 
 # Control creacion de api
 crear = True
+
+#Funciones LCD
+def inicializar_lcd(i2c_addr):
+    
+    return CharLCD('PCF8574', i2c_addr, auto_linebreaks=True)
+
+
+def mostrar_bienvenida(lcd):
+    
+    try:
+        lcd.clear()
+        lcd.write_string("<GRUPO7_ARQUI1>")
+        lcd.cursor_pos = (1, 0)
+        lcd.write_string("<VACAS_JUN_2024>")
+        time.sleep(10)
+        lcd.clear()
+        return "Mensaje de bienvenida mostrado en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+def mostrar_estado_luces_ciclico(lcd, luz):
+    habitaciones = nombres_habitaciones.copy()
+    habitaciones[habitaciones.index(luz)] = f"Luz_{luz}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for habitacion in habitaciones:
+            mensaje += habitacion + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        lcd.clear()
+        lcd.write_string(mensaje)
+        return "Información de luces actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+def mostrar_estado_Banda(banda_activada):
+    bandas = banda_activada.copy()
+    index_activada = bandas.index("1")
+    bandas[index_activada] = f"Banda_{index_activada}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for i, banda in enumerate(bandas):
+            mensaje += banda + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        lcd.clear()
+        lcd.write_string(mensaje)
+        return "Información de bandas actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+def mostrar_estado_porton(porton_activada):
+    porton = porton_activada.copy()
+    index_activada = porton.index("1")
+    porton[index_activada] = f"Porton{index_activada}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for i, puerta in enumerate(porton):
+            mensaje += puerta + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        lcd.clear()
+        lcd.write_string(mensaje)
+        return "Información del porton actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+    
+def mostrar_estado_alarma(alarma_activa):
+    alarma = alarma_activa.copy()
+    alarma_activada = alarma.index("1")
+    alarma[alarma_activada] = f"Alarma{alarma_activada}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for i, alrm in enumerate(alarma):
+            mensaje += alrm + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        lcd.clear()
+        lcd.write_string(mensaje)
+        return "Información de alarma actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
 
 #Funciones Laser 
 
@@ -396,7 +503,11 @@ def setup():
     GPIO.setup(PIN_BUZZER, GPIO.OUT)
     GPIO.setup(PIN_F1, GPIO.IN)
     GPIO.setup(PIN_F2, GPIO.IN)
-
+    
+    # --- PANTALLA LCD ---
+    # Mostrar mensaje de bienvenida durante 10 segundos
+    global lcd
+    pantalla = mostrar_bienvenida(lcd)
 
     # ----- Iniciar apagados los puertos -------
     GPIO.output(LED1, 0)
