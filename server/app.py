@@ -5,11 +5,15 @@ import sys
 import time
 import threading
 
-# * Initialize Flask app
-app = Flask(__name__)
+#LCD
+from RPLCD.i2c import CharLCD
 
-# * Enable CORS for all routes of the app 
+
+app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+# ----------------------------VARIABLES ----------------------
+
 
 # Lista para almacenar el estado de los LEDs
 leds = []
@@ -27,13 +31,33 @@ luz_recibida2 = None
 luz_exterior = False
 alarmaEncendida = False
 
+#variables LCD
+nombres_habitaciones = [
+    "Recepcion",
+    "Administracion",
+    "Bano",
+    "Conferencia",
+    "Area de Descarga",
+    "Patio",
+    "Cafeteria",
+    "Bodega"
+]
+
+cuarto_luz = None
+
+
+#pantalla = CharLCD('PCF8574', 0x27, auto_linebreaks=True)
+
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
 
 # Desactivamos alertas de GPIO
 GPIO.setwarnings(False)
 
-#Declaracion de puerto GPIO
+
+
+# ------------------------- DECLARACION DE PUERTOS---------------------------
+
 
 #MOTOR STEPPER 
 #el pin 11 a 13 no se estan usan
@@ -56,11 +80,9 @@ PIN_C = 23
 #SERVOMOTOR
 PIN_SERVO = 12
 
-# ---------- LASER -----------
-# laser
+# LASER 
+
 PIN_LASER = 38 #GPIO20
-
-
 
 # fotoresistencia
 PIN_F1 = 11 # GPIO17 
@@ -74,6 +96,8 @@ PIN_LEDf = 36 #GPIO16
 
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
+
+
 
 #Secuencia de movimiento stepper
 Seq = [[1,0,0,1],
@@ -91,7 +115,9 @@ StepDir = 1 # Colocar 1 o 2 para sentido horario
 
 # Initialise variables
 StepCounter = 0
-#asd
+
+# ------------------ CONFIGURACIONES ----------------------
+
 
 # Read wait time from command line
 if len(sys.argv)>1:
@@ -109,6 +135,106 @@ iniciar_stepper = True
 crear = True
 
 
+#Funciones LCD
+
+"""
+def inicializar_lcd(i2c_addr):
+    
+    return CharLCD('PCF8574', i2c_addr, auto_linebreaks=True)
+
+
+def mostrar_bienvenida(lcd):
+    
+    try:
+        lcd.clear()
+        lcd.write_string("<GRUPO7_ARQUI1>")
+        lcd.cursor_pos = (1, 0)
+        lcd.write_string("<VACAS_JUN_2024>")
+        time.sleep(10)
+        lcd.clear()
+        return "Mensaje de bienvenida mostrado en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+"""
+
+
+def mostrar_estado_luces_ciclico(lcd, luz):
+    habitaciones = nombres_habitaciones.copy()
+    habitaciones[habitaciones.index(luz)] = f"Luz_{luz}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for habitacion in habitaciones:
+            mensaje += habitacion + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        #lcd.clear()
+        #lcd.write_string(mensaje)
+        print(mensaje)
+        return "Información de luces actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+def mostrar_estado_Banda(banda_activada):
+    bandas = banda_activada.copy()
+    index_activada = bandas.index("1")
+    bandas[index_activada] = f"Banda_{index_activada}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for i, banda in enumerate(bandas):
+            mensaje += banda + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        #lcd.clear()
+        #lcd.write_string(mensaje)
+        print(mensaje)
+        return "Información de bandas actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+def mostrar_estado_porton(porton_activada):
+    porton = porton_activada.copy()
+    index_activada = porton.index("1")
+    porton[index_activada] = f"Porton{index_activada}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for i, puerta in enumerate(porton):
+            mensaje += puerta + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        #lcd.clear()
+        #lcd.write_string(mensaje)
+        print(mensaje)
+        return "Información del porton actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+    
+def mostrar_estado_alarma(alarma_activa):
+    alarma = alarma_activa.copy()
+    alarma_activada = alarma.index("1")
+    alarma[alarma_activada] = f"Alarma{alarma_activada}:ON"
+
+    try:
+        mensaje = ""
+        # Mostrar todos los estados en orden cíclico
+        for i, alrm in enumerate(alarma):
+            mensaje += alrm + " -> OFF"
+
+        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
+        #lcd.clear()
+        #lcd.write_string(mensaje)
+        print(mensaje)
+        return "Información de alarma actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+
 #Funciones Laser 
 
 def estado_luz_exterior():
@@ -122,46 +248,61 @@ def estado_luz_exterior():
         
     
     
-
-
 def laser():
     global luz_recibida2
-    luz_recibida2 = GPIO.input(PIN_F2)
+    
     
     GPIO.output(PIN_LASER, GPIO.HIGH)
     
-    
-    if luz_recibida2:
-        print("Mucha luz en FOTORESISTENCIA2: Apagando el buzzer")
-        GPIO.output(PIN_BUZZER, GPIO.LOW)
-    else:
-        print("Poca luz en FOTORESISTENCIA2: Encendiendo el buzzer")
-        GPIO.output(PIN_BUZZER, GPIO.HIGH)
+    while True:
+        luz_recibida2 = GPIO.input(PIN_F2)
+
+        if luz_recibida2:
+            GPIO.output(PIN_BUZZER, GPIO.HIGH)
+
+        else:
+            GPIO.output(PIN_BUZZER, GPIO.LOW)
+
+        time.sleep(1)
+
+        
 
 def fotoresistencia1():
     global luz_recibida1
     global luz_exterior
-    luz_recibida1 = GPIO.input(PIN_F1)
+    
     while True:
+        luz_recibida1 = GPIO.input(PIN_F1)
+        print(luz_recibida1)
         if luz_recibida1:
-            print("Mucha luz en FOTORESISTENCIA1: Apagando el láser y el LED")
+            GPIO.output(PIN_LASER, GPIO.HIGH)
+            GPIO.output(PIN_LEDf, GPIO.HIGH)
+            luz_exterior = True
+            laser()
+            
+
+        else:
+            luz_exterior = False
             GPIO.output(PIN_LASER, GPIO.LOW)
             GPIO.output(PIN_LEDf, GPIO.LOW)
-        else:
-            print("Poca luz en F1: Encendiendo el láser y el LED")
-            laser()
 
-            luz_exterior = True
-
-        time.sleep(5) # Espera 5 segundos antes de repetir
+        time.sleep(1) # Espera 5 segundos antes de repetir
 
 
+#LUCES CUARTOS
+def decimal_to_binary(decimal):
+    print("recibido "+ str(decimal))
+    binary = format(int(decimal), '03b')
+    return [int(bit) for bit in binary]
 
-
-
-
-        time.sleep(5) # Espera 5 segundos antes de repetir       
-
+def set_demultiplexer(value):
+    binary_value = decimal_to_binary(value)
+    GPIO.output(PIN_A, binary_value[0])
+    GPIO.output(PIN_B, binary_value[1])
+    GPIO.output(PIN_C, binary_value[2])
+    print(PIN_A)
+    print(PIN_B)
+    print(PIN_C)
 
 #Funcion para activar el servo motor
 def init_servo(pin, frequency=50):
@@ -354,79 +495,12 @@ def activar_servomotor():
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
    
-#Codigo que se ejecuta solo una vez
-def setup():
-    #Declaracion de GPIO input o output
-    #GPIO.setup(LED1, GPIO.OUT)
-    
-    # ---- MOTORES ----
-    GPIO.setup(MOTOR, GPIO.OUT)
-    # LEDS DEL MOTOR STEPPER
-    GPIO.setup(PIN_IN5_LEDGREEN, GPIO.OUT)
-    GPIO.setup(PIN_IN6_LEDRED, GPIO.OUT)
-    
-    #MOTOR STEPPER
-    GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
-    GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
-    GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
-    GPIO.setup(PIN_IN4_STEPPER,GPIO.OUT)
-
-    # ---- LUCES CUARTOS ----
-    GPIO.setup(PIN_A, GPIO.OUT)
-    GPIO.setup(PIN_B, GPIO.OUT)
-    GPIO.setup(PIN_C, GPIO.OUT)
-
-    # ---- SERVOMOTOR ----
-    GPIO.setup(PIN_SERVO, GPIO.OUT)
-    
-     # ---- LASER ----
-    GPIO.setup(PIN_LASER, GPIO.OUT)
-    GPIO.setup(PIN_LEDf, GPIO.OUT)
-    GPIO.setup(PIN_BUZZER, GPIO.OUT)
-    GPIO.setup(PIN_F1, GPIO.IN)
-    GPIO.setup(PIN_F2, GPIO.IN)
-
-
-    # ---- LASER ----
-    GPIO.setup(PIN_LASER, GPIO.OUT)
-    GPIO.setup(PIN_LEDf, GPIO.OUT)
-    GPIO.setup(PIN_BUZZER, GPIO.OUT)
-    GPIO.setup(PIN_F1, GPIO.IN)
-    GPIO.setup(PIN_F2, GPIO.IN)
-
-
-    # ----- Iniciar apagados los puertos -------
-    #GPIO.output(LED1, 0)
-    GPIO.output(MOTOR, 0)
-    #Iniciar apagados los puertos
-    GPIO.output(PIN_IN1_STEPPER,0)
-    GPIO.output(PIN_IN2_STEPPER,0)
-    GPIO.output(PIN_IN3_STEPPER,0)
-    GPIO.output(PIN_IN4_STEPPER,0)
-    GPIO.output(PIN_IN5_LEDGREEN,0)
-    GPIO.output(PIN_IN6_LEDRED, 1)
 
 
 
-#LUCES CUARTOS
-def decimal_to_binary(decimal):
-    print("recibido "+ str(decimal))
-    binary = format(int(decimal), '03b')
-    return [int(bit) for bit in binary]
-
-def set_demultiplexer(value):
-    binary_value = decimal_to_binary(value)
-    GPIO.output(PIN_A, binary_value[0])
-    GPIO.output(PIN_B, binary_value[1])
-    GPIO.output(PIN_C, binary_value[2])
-    print(PIN_A)
-    print(PIN_B)
-    print(PIN_C)
 
 #LASER
 
-
-# * en cuenta esta seccion de codigo
 
 @app.route('/api/Luz_Exterior', methods=['POST'])
 def handle_data4():
@@ -436,7 +510,9 @@ def handle_data4():
     global luz_exterior
 # Aquí puedes hacer lo que necesites con la variable 'selected_area'
     estado_luz = data.get('estado')
+
     print(estado_luz)
+
     if estado_luz == 1:
         luz_exterior= True
         estado_luz_exterior()
@@ -492,6 +568,70 @@ def handle_data_1():
     print("Área seleccionada:", selected_area)
     print("Área seleccionada se apaga:", selected_area)
     return 'Datos recibidos correctamente'
+
+#Codigo que se ejecuta solo una vez
+def setup():
+    #Declaracion de GPIO input o output
+    #GPIO.setup(LED1, GPIO.OUT)
+    
+    # ---- MOTORES ----
+    GPIO.setup(MOTOR, GPIO.OUT)
+
+    # LEDS DEL MOTOR STEPPER
+    GPIO.setup(PIN_IN5_LEDGREEN, GPIO.OUT)
+    GPIO.setup(PIN_IN6_LEDRED, GPIO.OUT)
+    
+    #MOTOR STEPPER
+    GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
+    GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
+    GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
+    GPIO.setup(PIN_IN4_STEPPER,GPIO.OUT)
+
+    # ---- LUCES CUARTOS ----
+    GPIO.setup(PIN_A, GPIO.OUT)
+    GPIO.setup(PIN_B, GPIO.OUT)
+    GPIO.setup(PIN_C, GPIO.OUT)
+
+    # ---- SERVOMOTOR ----
+    GPIO.setup(PIN_SERVO, GPIO.OUT)
+    
+     # ---- LASER ----
+    GPIO.setup(PIN_LASER, GPIO.OUT)
+    GPIO.setup(PIN_LEDf, GPIO.OUT)
+    GPIO.setup(PIN_BUZZER, GPIO.OUT)
+    GPIO.setup(PIN_F1, GPIO.IN)
+    GPIO.setup(PIN_F2, GPIO.IN)
+
+
+    # ---- LASER ----
+    GPIO.setup(PIN_LASER, GPIO.OUT)
+    GPIO.setup(PIN_LEDf, GPIO.OUT)
+    GPIO.setup(PIN_BUZZER, GPIO.OUT)
+    GPIO.setup(PIN_F1, GPIO.IN)
+    GPIO.setup(PIN_F2, GPIO.IN)
+    
+    # --- PANTALLA LCD ---
+    # Mostrar mensaje de bienvenida durante 10 segundos
+    """
+    global lcd
+    pantalla = mostrar_bienvenida(lcd)
+    """
+
+    # ----- Iniciar apagados los puertos -------
+    #GPIO.output(LED1, 0)
+    GPIO.output(MOTOR, 0)
+    #Iniciar apagados los puertos
+    GPIO.output(PIN_IN1_STEPPER,0)
+    GPIO.output(PIN_IN2_STEPPER,0)
+    GPIO.output(PIN_IN3_STEPPER,0)
+    GPIO.output(PIN_IN4_STEPPER,0)
+    GPIO.output(PIN_IN5_LEDGREEN,0)
+    GPIO.output(PIN_IN6_LEDRED, 1)
+
+    fotoresistencia1()
+
+
+
 
 try:
     while True:

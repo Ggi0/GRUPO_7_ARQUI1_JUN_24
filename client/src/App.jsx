@@ -122,7 +122,7 @@ function App() {
     // Función para obtener datos del servidor
     const fetchAlarma = async () => {
       try {
-        await axios.get('URL_DE_TU_API');
+        await axios.get('http://127.0.0.1:8000/api/estado_alarma');
         //setAlarma(response.data.cantidadClientes); // Ajusta según la estructura de tu respuesta
         console.log('Estado enviado correctamente.');
       } catch (error) {
