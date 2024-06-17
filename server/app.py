@@ -239,6 +239,37 @@ def mostrar_estado_alarma(estado_alarma):
     except Exception as e:
         return str(e)
 
+def mostrar_estado_sensor(estado_persona):
+
+    try:
+        mensaje = "Persona: " + estado_persona
+        """
+        while True:
+            for i in range(len(mensaje)):
+                lcd.clear()
+                lcd.write_string(mensaje[i:i+16])
+                time.sleep(0.5)
+        """
+        print(mensaje)
+        return "Información de alarma actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
+
+def mostrar_estado_foto(luzexterior):
+
+    try:
+        mensaje = "Luz exterior: " + luz_exterior 
+        """
+        while True:
+            for i in range(len(mensaje)):
+                lcd.clear()
+                lcd.write_string(mensaje[i:i+16])
+                time.sleep(0.5)
+        """
+        print(mensaje)
+        return "Información de alarma actualizada en la pantalla LCD."
+    except Exception as e:
+        return str(e)
 
 #Funciones Laser 
 
@@ -247,9 +278,11 @@ def estado_luz_exterior():
     
     if luz_exterior:
         GPIO.output(PIN_LEDf, GPIO.HIGH)
+        mostrar_estado_foto("Encendida")
     
     else:
         GPIO.output(PIN_LEDf, GPIO.LOW)
+        mostrar_estado_foto("apagada")
         
     
     
@@ -264,9 +297,11 @@ def laser():
 
         if luz_recibida2:
             GPIO.output(PIN_BUZZER, GPIO.HIGH)
+            mostrar_estado_alarma("Activada")
 
         else:
             GPIO.output(PIN_BUZZER, GPIO.LOW)
+            mostrar_estado_alarma("Desactivada")
 
         time.sleep(1)
 
