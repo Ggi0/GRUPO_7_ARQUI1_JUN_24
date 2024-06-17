@@ -25,3 +25,5 @@ try:
 except KeyboardInterrupt:
     # Limpia la configuración de los pines al salir
     GPIO.cleanup()
+
+print("hola")
