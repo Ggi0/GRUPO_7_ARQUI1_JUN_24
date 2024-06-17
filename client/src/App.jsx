@@ -35,6 +35,7 @@ function App() {
     }
   };
 
+
   // * codigo de la recepcion
   const [clientes] = useState(0);
 
@@ -121,7 +122,7 @@ function App() {
     // Función para obtener datos del servidor
     const fetchAlarma = async () => {
       try {
-        await axios.get('URL_DE_TU_API');
+        await axios.get('http://127.0.0.1:8000/api/estado_alarma');
         //setAlarma(response.data.cantidadClientes); // Ajusta según la estructura de tu respuesta
         console.log('Estado enviado correctamente.');
       } catch (error) {
@@ -144,7 +145,7 @@ function App() {
 
   const enviarEstadoAlServidorIluminacion = async (isChecked) => {
     try {
-      await axios.post('http://127.0.0.1:8000/api/activarLEDOut', {
+      await axios.post('http://127.0.0.1:8000/api/Luz_Exterior', {
         estado: isChecked ? 1 : 0
       });
       console.log('Estado enviado correctamente.');
