@@ -94,6 +94,22 @@ PIN_BUZZER = 40 #GPIO21
 # Luz externa
 PIN_LEDf = 36 #GPIO16
 
+<<<<<<< HEAD
+=======
+# ---- Sensor yair ------
+# Configurar los pines GPIO para los bits binarios
+bit0 = 14  # Pin 11 en la Raspberry Pi GPIO 14
+bit1 = 12  # Pin 12 en la Raspberry Pi GPIO 12
+bit2 = 4   # Pin 13 en la Raspberry Pi GPIO 4
+bit3 = 15  # Pin 15 en la Raspberry Pi GPIO 15
+
+# Configurar los pines GPIO para el sensor ultrasónico
+TRIG = 27  # Pin 16 en la Raspberry Pi GPIO 27
+ECHO = 22  # Pin 18 en la Raspberry Pi GPIO 22
+
+
+
+>>>>>>> c3b0b75c5a17555673328da7c3896ad9a949da1b
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
 
@@ -271,7 +287,7 @@ def mostrar_estado_foto(luzexterior):
     except Exception as e:
         return str(e)
 
-#Funciones Laser 
+# --------- Funciones Laser --------------------
 
 def estado_luz_exterior():
     global luz_exterior
@@ -327,6 +343,74 @@ def fotoresistencia1():
             GPIO.output(PIN_LEDf, GPIO.LOW)
 
         time.sleep(1) # Espera 5 segundos antes de repetir
+
+# -------------- FUNCIONES SENSOR YAIR -------------
+
+"""
+Explica cómo el sensor ultrasónico mide la distancia y 
+cómo se calcula la distancia en centímetros.
+"""
+
+def get_distance():
+    # Enviar pulso TRIG
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+
+    # Medir el tiempo de inicio y final del pulso ECHO
+    while GPIO.input(ECHO) == 0:
+        pulse_start = time.time()
+
+    while GPIO.input(ECHO) == 1:
+        pulse_end = time.time()
+
+    # Calcular la duración del pulso
+    pulse_duration = pulse_end - pulse_start
+
+    # Calcular la distancia
+    distance = pulse_duration * 17150
+    distance = round(distance, 2)
+
+    return distance
+
+number = 0
+
+"""
+Describe el proceso continuo de medir la distancia, 
+actualizar un contador basado en la distancia medida, 
+y reflejar este contador en los pines GPIO en formato binario.
+"""
+
+def loop():
+    global number
+    while True:
+        # Obtener la distancia medida por el sensor ultrasónico
+        distance = get_distance()
+        print('Persona detectada')
+        print(f"Distancia: {distance} cm")
+
+        # Incrementar o decrementar el contador según la distancia medida
+        if distance >= 0 and distance <= 7:
+            number += 1
+            if number > 9:
+                number = 0
+        elif distance > 7 and distance <= 14:
+            if number > 0:
+                number -= 1
+
+        # Enviar el número actual en formato binario a los pines
+        GPIO.output(bit0, number & 0b0001)
+        GPIO.output(bit1, number & 0b0010)
+        GPIO.output(bit2, number & 0b0100)
+        GPIO.output(bit3, number & 0b1000)
+
+        # Esperar un poco para evitar múltiples cambios por una sola detección
+        time.sleep(1)
+
+
+
+
+
 
 
 #LUCES CUARTOS
@@ -534,6 +618,87 @@ def activar_servomotor():
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
    
+<<<<<<< HEAD
+=======
+#Codigo que se ejecuta solo una vez
+def setup():
+    #Declaracion de GPIO input o output
+    #GPIO.setup(LED1, GPIO.OUT)
+    
+    # ---- MOTORES ----
+    GPIO.setup(MOTOR, GPIO.OUT)
+    
+    # LEDS DEL MOTOR STEPPER
+    GPIO.setup(PIN_IN5_LEDGREEN, GPIO.OUT)
+    GPIO.setup(PIN_IN6_LEDRED, GPIO.OUT)
+    
+    #MOTOR STEPPER
+    GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
+    GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
+    GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
+    GPIO.setup(PIN_IN4_STEPPER,GPIO.OUT)
+
+    # ---- LUCES CUARTOS ----
+    GPIO.setup(PIN_A, GPIO.OUT)
+    GPIO.setup(PIN_B, GPIO.OUT)
+    GPIO.setup(PIN_C, GPIO.OUT)
+
+    # ---- SERVOMOTOR ----
+    GPIO.setup(PIN_SERVO, GPIO.OUT)
+    
+     # ---- LASER ----
+    GPIO.setup(PIN_LASER, GPIO.OUT)
+    GPIO.setup(PIN_LEDf, GPIO.OUT)
+    GPIO.setup(PIN_BUZZER, GPIO.OUT)
+    GPIO.setup(PIN_F1, GPIO.IN)
+    GPIO.setup(PIN_F2, GPIO.IN)
+
+    # ---- LASER ----
+    GPIO.setup(PIN_LASER, GPIO.OUT)
+    GPIO.setup(PIN_LEDf, GPIO.OUT)
+    GPIO.setup(PIN_BUZZER, GPIO.OUT)
+    GPIO.setup(PIN_F1, GPIO.IN)
+    GPIO.setup(PIN_F2, GPIO.IN)
+    
+    # ---- Sensor YAIR -----------
+    # Configurar los pines como salidas
+    GPIO.setup([bit0, bit1, bit2, bit3], GPIO.OUT)
+
+    # Configurar los pines para el sensor ultrasónico
+    GPIO.setup(TRIG, GPIO.OUT)
+    GPIO.setup(ECHO, GPIO.IN)
+
+    
+    
+    # --- PANTALLA LCD ---
+    # Mostrar mensaje de bienvenida durante 10 segundos
+    global lcd
+    pantalla = mostrar_bienvenida(lcd)
+
+    # ----- Iniciar apagados los puertos -------
+    GPIO.output(LED1, 0)
+    GPIO.output(MOTOR, 0)
+    
+    #Iniciar apagados los puertos
+    GPIO.output(PIN_IN1_STEPPER,0)
+    GPIO.output(PIN_IN2_STEPPER,0)
+    GPIO.output(PIN_IN3_STEPPER,0)
+    GPIO.output(PIN_IN4_STEPPER,0)
+    GPIO.output(PIN_IN5_LEDGREEN,0)
+    GPIO.output(PIN_IN6_LEDRED, 1)
+    
+    
+    # ----- Sensor YAIR  set mode y output------
+    # Configurar el modo de numeración de pines --> AQUI SE MODIFICA GPIO en vez de PIN -> SI MODIFICA TODOS COMENTARLO
+    # No se si va modificar todo los demas pines.
+    #LO COMENTE MEJOR QUE TAL SI MODIFICA TODOS LOS PINES, investigar aún
+    # por lo tanto es problable que no funcione lo del yair carrito
+    #GPIO.setmode(GPIO.BCM)
+
+    # Inicializar el pin TRIG en bajo
+    GPIO.output(TRIG, False)
+    time.sleep(2)
+>>>>>>> c3b0b75c5a17555673328da7c3896ad9a949da1b
 
 
 
@@ -580,6 +745,19 @@ def handle_data_6():
     
     return jsonify({"estado_alarma exterior": alarma}), 200   
 
+
+# SENSOR yair 
+# Rutas de la API para manejar el conteo de personas
+
+@app.route('/api/contador_personas', methods=['GET'])
+def handle_data7():
+    # Devuelve el número actual de personas detectadas.
+    
+    global number
+    if number is None:
+        return jsonify({"error": "El contador no está configurado."}), 404
+    
+    return jsonify({"contador_personas": number}), 200
     
 
 # LUCES
