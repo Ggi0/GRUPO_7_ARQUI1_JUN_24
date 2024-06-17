@@ -159,76 +159,81 @@ def mostrar_bienvenida(lcd):
 """
 
 
-def mostrar_estado_luces_ciclico(lcd, luz):
-    habitaciones = nombres_habitaciones.copy()
-    habitaciones[habitaciones.index(luz)] = f"Luz_{luz}:ON"
+def mostrar_estado_luces_ciclico(luz):
+    estados = []
+    for i in range(len(nombres_habitaciones)):
+        if i == luz:
+            estados.append(f"{nombres_habitaciones[i]} on")
+        else:
+            estados.append(f"{nombres_habitaciones[i]} off")
 
     try:
         mensaje = ""
         # Mostrar todos los estados en orden cíclico
-        for habitacion in habitaciones:
-            mensaje += habitacion + " -> OFF"
+        for habitacion in estados:
+            mensaje += habitacion + "-> "
 
         mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
-        #lcd.clear()
-        #lcd.write_string(mensaje)
+        
+        """
+        while True:
+            for i in range(len(mensaje)):
+                lcd.clear()
+                lcd.write_string(mensaje[i:i+16])
+                time.sleep(0.5)
+        """
+
+
         print(mensaje)
         return "Información de luces actualizada en la pantalla LCD."
     except Exception as e:
         return str(e)
 
-def mostrar_estado_Banda(banda_activada):
-    bandas = banda_activada.copy()
-    index_activada = bandas.index("1")
-    bandas[index_activada] = f"Banda_{index_activada}:ON"
+def mostrar_estado_Banda(estado_banda):
+    
 
     try:
-        mensaje = ""
-        # Mostrar todos los estados en orden cíclico
-        for i, banda in enumerate(bandas):
-            mensaje += banda + " -> OFF"
-
-        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
-        #lcd.clear()
-        #lcd.write_string(mensaje)
+        mensaje = "Estado Banda: " + estado_banda
+        """
+        while True:
+            for i in range(len(mensaje)):
+                lcd.clear()
+                lcd.write_string(mensaje[i:i+16])
+                time.sleep(0.5)
+        """
         print(mensaje)
         return "Información de bandas actualizada en la pantalla LCD."
     except Exception as e:
         return str(e)
 
-def mostrar_estado_porton(porton_activada):
-    porton = porton_activada.copy()
-    index_activada = porton.index("1")
-    porton[index_activada] = f"Porton{index_activada}:ON"
+def mostrar_estado_porton(estado_porton):
+    
 
     try:
-        mensaje = ""
-        # Mostrar todos los estados en orden cíclico
-        for i, puerta in enumerate(porton):
-            mensaje += puerta + " -> OFF"
-
-        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
-        #lcd.clear()
-        #lcd.write_string(mensaje)
+        mensaje = "Estado Porton: " + estado_porton
+        """
+        while True:
+            for i in range(len(mensaje)):
+                lcd.clear()
+                lcd.write_string(mensaje[i:i+16])
+                time.sleep(0.5)
+        """
         print(mensaje)
         return "Información del porton actualizada en la pantalla LCD."
     except Exception as e:
         return str(e)
     
-def mostrar_estado_alarma(alarma_activa):
-    alarma = alarma_activa.copy()
-    alarma_activada = alarma.index("1")
-    alarma[alarma_activada] = f"Alarma{alarma_activada}:ON"
+def mostrar_estado_alarma(estado_alarma):
 
     try:
-        mensaje = ""
-        # Mostrar todos los estados en orden cíclico
-        for i, alrm in enumerate(alarma):
-            mensaje += alrm + " -> OFF"
-
-        mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
-        #lcd.clear()
-        #lcd.write_string(mensaje)
+        mensaje = "Estado Alarma: " + estado_alarma
+        """
+        while True:
+            for i in range(len(mensaje)):
+                lcd.clear()
+                lcd.write_string(mensaje[i:i+16])
+                time.sleep(0.5)
+        """
         print(mensaje)
         return "Información de alarma actualizada en la pantalla LCD."
     except Exception as e:
@@ -300,9 +305,8 @@ def set_demultiplexer(value):
     GPIO.output(PIN_A, binary_value[0])
     GPIO.output(PIN_B, binary_value[1])
     GPIO.output(PIN_C, binary_value[2])
-    print(PIN_A)
-    print(PIN_B)
-    print(PIN_C)
+    mostrar_estado_luces_ciclico(value)
+
 
 #Funcion para activar el servo motor
 def init_servo(pin, frequency=50):
@@ -441,17 +445,15 @@ def activar_motor():
     if estado_motor == 1:
         start_motor()
         print("Motor activado")
-        print(PIN_IN1_STEPPER)
-        print(PIN_IN2_STEPPER)
-        print(PIN_IN3_STEPPER)
-        print(PIN_IN4_STEPPER)
         GPIO.output(PIN_IN5_LEDGREEN, 1)
         GPIO.output(PIN_IN6_LEDRED,   0)
+        mostrar_estado_Banda("ACTIVADO")
     else:
         stop_motor()
         print("Motor detenido")
         GPIO.output(PIN_IN5_LEDGREEN, 0)
         GPIO.output(PIN_IN6_LEDRED,   1)
+        mostrar_estado_Banda("DESACTIVADO")
     
         
     #Tambien la opcion de detener totalmente el motor pero hay que inicializar de nuevo
@@ -481,17 +483,19 @@ def activar_servomotor():
         move_servo(pwm, angle)
         print("Motor activado")
         print(PIN_SERVO)
+        mostrar_estado_porton("ABIERTO")
 
     else:
         angle = 0
         move_servo(pwm, angle)
         print("Puerta cerrada")
         print(PIN_SERVO)
+        mostrar_estado_porton("CERRADO")
     
         
     #Tambien la opcion de detener totalmente el motor pero hay que inicializar de nuevo
     #Es con la siguiente linea
-    #stop_motor()
+    #stop_motor()999999999999
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
    
@@ -553,6 +557,7 @@ def handle_data():
 
         set_demultiplexer(int(selected_area))
         print("Área seleccionada:", selected_area)
+
 
         
         return jsonify({'message': 'Datos recibidos correctamente'})
@@ -628,12 +633,15 @@ def setup():
     GPIO.output(PIN_IN5_LEDGREEN,0)
     GPIO.output(PIN_IN6_LEDRED, 1)
 
-    fotoresistencia1()
+    
+    #fotoresistencia1()
 
 
 
 
 try:
+
+    
     while True:
         time.sleep(1)  # Mantener el hilo principal dormido
 
