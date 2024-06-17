@@ -675,18 +675,17 @@ def handle_data_6():
 
 
 # SENSOR yair 
+# Rutas de la API para manejar el conteo de personas
+
 @app.route('/api/contador_personas', methods=['GET'])
 def handle_data7():
+    # Devuelve el número actual de personas detectadas.
+    
     global number
-    data = request.json
+    if number is None:
+        return jsonify({"error": "El contador no está configurado."}), 404
     
-    # Aquí puedes hacer lo que necesites con la variable 'selected_area'
-    cantidad = data.get('estado')
-    if cantidad is None:
-        return jsonify({"error": "El sensor Ultrasonico no ha sido configurado aun"}), 404
-    
-    return jsonify({"contador_personas": cantidad}), 200
-
+    return jsonify({"contador_personas": number}), 200
     
 
 # LUCES
