@@ -4,12 +4,10 @@ import RPi.GPIO as GPIO
 import sys
 import time
 import threading
-<<<<<<< HEAD
-=======
 
 #LCD
-from RPLCD.i2c import CharLCD
->>>>>>> 639ed3df19c589fc5b0e30a1a16bdfcc1d321ea2
+#from RPLCD.i2c import CharLCD
+
 
 
 app = Flask(__name__)
@@ -34,8 +32,7 @@ luz_recibida2 = None
 luz_exterior = False
 alarmaEncendida = False
 
-<<<<<<< HEAD
-=======
+
 #variables LCD
 nombres_habitaciones = [
     "Recepcion",
@@ -53,7 +50,6 @@ cuarto_luz = None
 
 #pantalla = CharLCD('PCF8574', 0x27, auto_linebreaks=True)
 
->>>>>>> 639ed3df19c589fc5b0e30a1a16bdfcc1d321ea2
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
 
@@ -100,28 +96,21 @@ PIN_BUZZER = 40 #GPIO21
 # Luz externa
 PIN_LEDf = 36 #GPIO16
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
+
 # ---- Sensor yair ------
 # Configurar los pines GPIO para los bits binarios
 bit0 = 14  # Pin 11 en la Raspberry Pi GPIO 14
 bit1 = 12  # Pin 12 en la Raspberry Pi GPIO 12
 bit2 = 4   # Pin 13 en la Raspberry Pi GPIO 4
 bit3 = 15  # Pin 15 en la Raspberry Pi GPIO 15
->>>>>>> 639ed3df19c589fc5b0e30a1a16bdfcc1d321ea2
 
 
+# Configurar los pines GPIO para el sensor ultras�nico
+TRIG = 27  # Pin 16 en la Raspberry Pi GPIO 27
+ECHO = 22  # Pin 18 en la Raspberry�Pi�GPIO�22
 
-
->>>>>>> c3b0b75c5a17555673328da7c3896ad9a949da1b
->>>>>>> 0836f647a2d6199937fab5076b10748798043a18
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
-
 
 
 #Secuencia de movimiento stepper
@@ -159,11 +148,32 @@ iniciar_stepper = True
 # Control creacion de api
 crear = True
 
-<<<<<<< HEAD
-#Funciones Laser 
-=======
+#---------------------FUNCIONES SENSOR --------------------------
 
-# Funcion Sensor
+def get_distance():
+    # Enviar pulso TRIG
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+
+    # Medir el tiempo de inicio y final del pulso ECHO
+    while GPIO.input(ECHO) == 0:
+        pulse_start = time.time()
+
+    while GPIO.input(ECHO) == 1:
+        pulse_end = time.time()
+
+    # Calcular la duraci�n del pulso
+    pulse_duration = pulse_end - pulse_start
+
+    # Calcular la distancia
+    distance = pulse_duration * 17150
+    distance = round(distance, 2)
+
+    return distance
+
+number = 0
+
 def loop():
     # Funciones del ultrasonico
     var1 = 0
@@ -183,7 +193,7 @@ def loop():
             if number > 0:
                 number -= 1
 
-        # Enviar el n�mero actual en formato binario a los pines
+        # Enviar el numero actual en formato binario a los pines
         GPIO.output(bit0, number & 0b0001)
         GPIO.output(bit1, number & 0b0010)
         GPIO.output(bit2, number & 0b0100)
@@ -191,7 +201,6 @@ def loop():
 
         # Esperar un poco para evitar m�ltiples cambios por una sola detecci�n
         time.sleep(1)
-
 
 
 #Funciones LCD
@@ -330,12 +339,9 @@ def mostrar_estado_foto(luzexterior):
     except Exception as e:
         return str(e)
 
-<<<<<<< HEAD
-#Funciones Laser 
-=======
+
 # --------- Funciones Laser --------------------
->>>>>>> 639ed3df19c589fc5b0e30a1a16bdfcc1d321ea2
->>>>>>> 0836f647a2d6199937fab5076b10748798043a18
+
 
 def estado_luz_exterior():
     global luz_exterior
@@ -352,7 +358,7 @@ def estado_luz_exterior():
     
 def laser():
     global luz_recibida2
-    
+    global alarmaEncendida
     
     GPIO.output(PIN_LASER, GPIO.HIGH)
     
@@ -362,10 +368,12 @@ def laser():
         if luz_recibida2:
             GPIO.output(PIN_BUZZER, GPIO.HIGH)
             mostrar_estado_alarma("Activada")
+            alarmaEncendida = True
 
         else:
             GPIO.output(PIN_BUZZER, GPIO.LOW)
             mostrar_estado_alarma("Desactivada")
+            alarmaEncendida = False
 
         time.sleep(1)
 
@@ -392,13 +400,11 @@ def fotoresistencia1():
 
         time.sleep(1) # Espera 5 segundos antes de repetir
 
-<<<<<<< HEAD
+
 def hilo_fotoresistencia():
     hilo = threading.Thread(target=fotoresistencia1)
     hilo.start()
     
-=======
->>>>>>> 0836f647a2d6199937fab5076b10748798043a18
 
 #LUCES CUARTOS
 def decimal_to_binary(decimal):
@@ -605,80 +611,8 @@ def activar_servomotor():
     
     return jsonify({"mensaje": "Estado del motor actualizado correctamente"}), 200
    
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-#Codigo que se ejecuta solo una vez
-def setup():
-    #Declaracion de GPIO input o output
-    #GPIO.setup(LED1, GPIO.OUT)
-    
-    # ---- MOTORES ----
-    GPIO.setup(MOTOR, GPIO.OUT)
-    
-    # LEDS DEL MOTOR STEPPER
-    GPIO.setup(PIN_IN5_LEDGREEN, GPIO.OUT)
-    GPIO.setup(PIN_IN6_LEDRED, GPIO.OUT)
-    
-    #MOTOR STEPPER
-    GPIO.setup(PIN_IN1_STEPPER,GPIO.OUT)
-    GPIO.setup(PIN_IN2_STEPPER,GPIO.OUT)
-    GPIO.setup(PIN_IN3_STEPPER,GPIO.OUT)
-    GPIO.setup(PIN_IN4_STEPPER,GPIO.OUT)
 
-    # ---- LUCES CUARTOS ----
-    GPIO.setup(PIN_A, GPIO.OUT)
-    GPIO.setup(PIN_B, GPIO.OUT)
-    GPIO.setup(PIN_C, GPIO.OUT)
-
-    # ---- SERVOMOTOR ----
-    GPIO.setup(PIN_SERVO, GPIO.OUT)
     
-     # ---- LASER ----
-    GPIO.setup(PIN_LASER, GPIO.OUT)
-    GPIO.setup(PIN_LEDf, GPIO.OUT)
-    GPIO.setup(PIN_BUZZER, GPIO.OUT)
-    GPIO.setup(PIN_F1, GPIO.IN)
-    GPIO.setup(PIN_F2, GPIO.IN)
-
-    # ---- LASER ----
-    GPIO.setup(PIN_LASER, GPIO.OUT)
-    GPIO.setup(PIN_LEDf, GPIO.OUT)
-    GPIO.setup(PIN_BUZZER, GPIO.OUT)
-    GPIO.setup(PIN_F1, GPIO.IN)
-    GPIO.setup(PIN_F2, GPIO.IN)
-
-
-    # ----- Iniciar apagados los puertos -------
-    GPIO.output(LED1, 0)
-    GPIO.output(MOTOR, 0)
-    
-    #Iniciar apagados los puertos
-    GPIO.output(PIN_IN1_STEPPER,0)
-    GPIO.output(PIN_IN2_STEPPER,0)
-    GPIO.output(PIN_IN3_STEPPER,0)
-    GPIO.output(PIN_IN4_STEPPER,0)
-    GPIO.output(PIN_IN5_LEDGREEN,0)
-    GPIO.output(PIN_IN6_LEDRED, 1)
-<<<<<<< HEAD
-=======
-    
-    
-    # ----- Sensor YAIR  set mode y output------
-    # Configurar el modo de numeración de pines --> AQUI SE MODIFICA GPIO en vez de PIN -> SI MODIFICA TODOS COMENTARLO
-    # No se si va modificar todo los demas pines.
-    #LO COMENTE MEJOR QUE TAL SI MODIFICA TODOS LOS PINES, investigar aún
-    # por lo tanto es problable que no funcione lo del yair carrito
-    #GPIO.setmode(GPIO.BCM)
-
-    # Inicializar el pin TRIG en bajo
-    GPIO.output(TRIG, False)
-    time.sleep(2)
->>>>>>> c3b0b75c5a17555673328da7c3896ad9a949da1b
->>>>>>> 639ed3df19c589fc5b0e30a1a16bdfcc1d321ea2
->>>>>>> 0836f647a2d6199937fab5076b10748798043a18
-
 
 
 
@@ -717,12 +651,20 @@ def handle_data_5():
 # --- metodo get para la alarma
 @app.route('/api/estado_alarma', methods=['GET'])
 def handle_data_6():
+
     global alarmaEncendida
-    alarma = alarmaEncendida
+    alarmaEncendida = True
+    
+    if alarmaEncendida:
+        alarma = "Alarma Encendida"
+    else:
+        alarma = "Alarma Desactivada"
+
+
     if alarmaEncendida is None:
         return jsonify({"error": "El estado de la alarma no ha sido configurado aun"}), 404
     
-    return jsonify({"estado_alarma exterior": alarma}), 200   
+    return jsonify({"estado_alarma_exterior": alarma}), 200   
 
     
 
@@ -752,6 +694,22 @@ def handle_data_1():
     print("Área seleccionada:", selected_area)
     print("Área seleccionada se apaga:", selected_area)
     return 'Datos recibidos correctamente'
+
+# SENSOR
+
+
+@app.route('/api/contador_personas', methods=['GET'])
+def handle_data7():
+    # Devuelve el numero actual de personas detectadas.
+    
+    global number
+    number = 9
+    cantidadClientes = number
+    if  number is None:
+        return jsonify({"error": "El contador no esta configurado."}), 404
+    
+    return jsonify({"contador_personas": cantidadClientes}), 200
+
 
 #Codigo que se ejecuta solo una vez
 def setup():
@@ -812,8 +770,23 @@ def setup():
     GPIO.output(PIN_IN5_LEDGREEN,0)
     GPIO.output(PIN_IN6_LEDRED, 1)
 
-    
-    #fotoresistencia1()
+    # ----- Sensor YAIR  set mode y output------
+    # Configurar el modo de numeraci�n de pines --> AQUI SE MODIFICA GPIO en vez de PIN -> SI MODIFICA TODOS COMENTARLO
+    # No se si va modificar todo los demas pines.
+    #LO COMENTE MEJOR QUE TAL SI MODIFICA TODOS LOS PINES, investigar a�n
+    # por lo tanto es problable que no funcione lo del yair carrito
+    #GPIO.setmode(GPIO.BCM)
+
+    # Inicializar el pin TRIG en bajo
+    #GPIO.output(TRIG, GPIO.LOW)
+    #time.sleep(2)  
+
+
+    #hilo_fotoresistencia()
+
+
+
+ 
 
 
 
