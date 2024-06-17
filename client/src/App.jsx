@@ -35,15 +35,16 @@ function App() {
     }
   };
 
+
   // * codigo de la recepcion
-  const [clientes] = useState(0);
+  const [clientes, setClientes] = useState(0);
 
   useEffect(() => {
     // Función para obtener datos del servidor
     const fetchClientes = async () => {
       try {
-        await axios.get('URL_DE_TU_API');
-        //setClientes(response.data.cantidadClientes); // Ajusta según la estructura de tu respuesta
+        const response = await axios.get('http://127.0.0.1:8000/api/contador_personas');
+        setClientes(response.data.contador_personas); // Ajusta según la estructura de tu respuesta
         console.log('Estado enviado correctamente.');
       } catch (error) {
         console.error('Error al obtener los datos', error);
@@ -115,14 +116,14 @@ function App() {
   };
 
   // * Codigo de la alarma
-  const [alarma] = useState(false);
+  const [alarma, setAlarma] = useState(false);
 
   useEffect(() => {
     // Función para obtener datos del servidor
     const fetchAlarma = async () => {
       try {
-        await axios.get('URL_DE_TU_API');
-        //setAlarma(response.data.cantidadClientes); // Ajusta según la estructura de tu respuesta
+        const response  = await axios.get('http://127.0.0.1:8000/api/estado_alarma');
+        setAlarma(response.data.estado_alarma_exterior); // Ajusta según la estructura de tu respuesta
         console.log('Estado enviado correctamente.');
       } catch (error) {
         console.error('Error al obtener los datos', error);
