@@ -6,9 +6,9 @@ import time
 import threading
 
 #LCD
-#from RPLCD.i2c import CharLCD
+from RPLCD.i2c import CharLCD
 
-
+lcd = None
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
@@ -48,7 +48,7 @@ nombres_habitaciones = [
 cuarto_luz = None
 
 
-#pantalla = CharLCD('PCF8574', 0x27, auto_linebreaks=True)
+pantalla = CharLCD('PCF8574', 0x27, auto_linebreaks=True)
 
 # Tipo de configuracion de los puertos
 GPIO.setmode(GPIO.BOARD)
@@ -99,15 +99,15 @@ PIN_LEDf = 36 #GPIO16
 
 # ---- Sensor yair ------
 # Configurar los pines GPIO para los bits binarios
-bit0 = 14  # Pin 11 en la Raspberry Pi GPIO 14
-bit1 = 12  # Pin 12 en la Raspberry Pi GPIO 12
-bit2 = 4   # Pin 13 en la Raspberry Pi GPIO 4
-bit3 = 15  # Pin 15 en la Raspberry Pi GPIO 15
+bit0 = 8  # Pin 11 en la Raspberry Pi GPIO 14
+bit1 = 32 # Pin 12 en la Raspberry Pi GPIO 12
+bit2 = 7   # Pin 13 en la Raspberry Pi GPIO 4
+bit3 = 10  # Pin 15 en la Raspberry Pi GPIO 15
 
 
 # Configurar los pines GPIO para el sensor ultras�nico
-TRIG = 27  # Pin 16 en la Raspberry Pi GPIO 27
-ECHO = 22  # Pin 18 en la Raspberry�Pi�GPIO�22
+TRIG = 13  # Pin 16 en la Raspberry Pi GPIO 27
+ECHO = 15  # Pin 18 en la Raspberry�Pi�GPIO�22
 
 #Numero de puertos motor stepper utilizados para su programacion
 StepPins = [PIN_IN1_STEPPER,PIN_IN2_STEPPER,PIN_IN3_STEPPER,PIN_IN4_STEPPER]
@@ -205,7 +205,7 @@ def loop():
 
 #Funciones LCD
 
-"""
+
 def inicializar_lcd(i2c_addr):
     
     return CharLCD('PCF8574', i2c_addr, auto_linebreaks=True)
@@ -224,7 +224,7 @@ def mostrar_bienvenida(lcd):
     except Exception as e:
         return str(e)
 
-"""
+
 
 
 def mostrar_estado_luces_ciclico(luz):
@@ -243,14 +243,10 @@ def mostrar_estado_luces_ciclico(luz):
 
         mensaje = mensaje.rstrip(" -> ")  # Eliminar la flecha al final
         
-        """
-        while True:
-            for i in range(len(mensaje)):
-                lcd.clear()
-                lcd.write_string(mensaje[i:i+16])
-                time.sleep(0.5)
-        """
 
+        lcd.clear()
+        lcd.write_string(mensaje)
+        time.sleep(0.5)
 
         print(mensaje)
         return "Información de luces actualizada en la pantalla LCD."
@@ -262,13 +258,10 @@ def mostrar_estado_Banda(estado_banda):
 
     try:
         mensaje = "Estado Banda: " + estado_banda
-        """
-        while True:
-            for i in range(len(mensaje)):
-                lcd.clear()
-                lcd.write_string(mensaje[i:i+16])
-                time.sleep(0.5)
-        """
+
+        lcd.clear()
+        lcd.write_string(mensaje)
+        time.sleep(0.5)
         print(mensaje)
         return "Información de bandas actualizada en la pantalla LCD."
     except Exception as e:
@@ -279,13 +272,11 @@ def mostrar_estado_porton(estado_porton):
 
     try:
         mensaje = "Estado Porton: " + estado_porton
-        """
-        while True:
-            for i in range(len(mensaje)):
-                lcd.clear()
-                lcd.write_string(mensaje[i:i+16])
-                time.sleep(0.5)
-        """
+
+        lcd.clear()
+        lcd.write_string(mensaje)
+        time.sleep(0.5)
+
         print(mensaje)
         return "Información del porton actualizada en la pantalla LCD."
     except Exception as e:
@@ -295,14 +286,13 @@ def mostrar_estado_alarma(estado_alarma):
 
     try:
         mensaje = "Estado Alarma: " + estado_alarma
-        """
-        while True:
-            for i in range(len(mensaje)):
-                lcd.clear()
-                lcd.write_string(mensaje[i:i+16])
-                time.sleep(0.5)
-        """
+
+        lcd.clear()
+        lcd.write_string(mensaje)
+        time.sleep(0.5)
         print(mensaje)
+
+
         return "Información de alarma actualizada en la pantalla LCD."
     except Exception as e:
         return str(e)
@@ -311,14 +301,11 @@ def mostrar_estado_sensor(estado_persona):
 
     try:
         mensaje = "Persona: " + estado_persona
-        """
-        while True:
-            for i in range(len(mensaje)):
-                lcd.clear()
-                lcd.write_string(mensaje[i:i+16])
-                time.sleep(0.5)
-        """
+        lcd.clear()
+        lcd.write_string(mensaje)
+        time.sleep(0.5)
         print(mensaje)
+
         return "Información de alarma actualizada en la pantalla LCD."
     except Exception as e:
         return str(e)
@@ -327,13 +314,10 @@ def mostrar_estado_foto(luzexterior):
 
     try:
         mensaje = "Luz exterior: " + luzexterior 
-        """
-        while True:
-            for i in range(len(mensaje)):
-                lcd.clear()
-                lcd.write_string(mensaje[i:i+16])
-                time.sleep(0.5)
-        """
+        lcd.clear()
+        lcd.write_string(mensaje)
+        time.sleep(0.5)
+
         print(mensaje)
         return "Información de alarma actualizada en la pantalla LCD."
     except Exception as e:
@@ -654,7 +638,7 @@ def handle_data_6():
 
     global alarmaEncendida
     alarmaEncendida = True
-    
+
     if alarmaEncendida:
         alarma = "Alarma Encendida"
     else:
@@ -754,10 +738,10 @@ def setup():
     
     # --- PANTALLA LCD ---
     # Mostrar mensaje de bienvenida durante 10 segundos
-    """
+    
     global lcd
     pantalla = mostrar_bienvenida(lcd)
-    """
+    
 
     # ----- Iniciar apagados los puertos -------
     #GPIO.output(LED1, 0)
@@ -771,18 +755,13 @@ def setup():
     GPIO.output(PIN_IN6_LEDRED, 1)
 
     # ----- Sensor YAIR  set mode y output------
-    # Configurar el modo de numeraci�n de pines --> AQUI SE MODIFICA GPIO en vez de PIN -> SI MODIFICA TODOS COMENTARLO
-    # No se si va modificar todo los demas pines.
-    #LO COMENTE MEJOR QUE TAL SI MODIFICA TODOS LOS PINES, investigar a�n
-    # por lo tanto es problable que no funcione lo del yair carrito
-    #GPIO.setmode(GPIO.BCM)
 
     # Inicializar el pin TRIG en bajo
-    #GPIO.output(TRIG, GPIO.LOW)
-    #time.sleep(2)  
+    GPIO.output(TRIG, GPIO.LOW)
+    time.sleep(2)  
 
 
-    #hilo_fotoresistencia()
+    hilo_fotoresistencia()
 
 
 
